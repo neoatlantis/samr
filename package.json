@@ -1,0 +1,14 @@
+{
+  "name": "samr",
+  "version": "1.0.0",
+  "description": "Socket.IO Application Message Router.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "NeoAtlantis",
+  "license": "GPL-2.0",
+  "dependencies": {
+    "socket.io": "^4.5.3"
+  }
+}
