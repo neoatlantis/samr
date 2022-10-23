@@ -112,7 +112,9 @@ class ServerSecurityContext extends events.EventEmitter {
 
         // 5. Declare encryption encryption started
         this.#encryption_started = true;
-        this.emit("secure.ready");
+        _.remove(args);
+        args.push(["secured"]);
+
     }
 
 }

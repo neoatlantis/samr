@@ -10,8 +10,8 @@ const ClientSecurityContext = require("./ClientSecurityContext");
 
 
 
-module.exports = (socket) => {
-    let sc = new ClientSecurityContext();
+module.exports = (security_consultant)=>(socket) => {
+    let sc = new ClientSecurityContext(security_consultant);
     socket[security_context] = sc;
 
     socket[emit] = socket.emit;

@@ -11,9 +11,14 @@ class ClientSecurityContext extends events.EventEmitter {
     #encryption_started;
     #ephermal_secret_key;
     #cipher;
+    #security_consultant;
 
-    constructor(){
+    constructor(security_consultant){
         super();
+        if(!_.isFunction(security_consultant)){
+            throw Error("SecurityConsultant is required.");
+        }
+        this.#security_consultant = security_consultant;
         this.#reset();
     }
 
@@ -105,7 +110,13 @@ class ClientSecurityContext extends events.EventEmitter {
             throw Error("fatal.secure.server-answer.bad-format");
         }
 
-        console.log("Server PGP Key fingerprint =", server_pgp_key.getFingerprint());
+        let security_consulting = {
+            fingerprint: server_pgp_key.getFingerprint(),
+        }
+        if(!await this.#security_consultant(security_consulting)){
+            console.debug("SecurityConsultant rejected server PGP key.");
+            throw Error('fatal.secure.server-answer.not-accepted');
+        }
 
         // 3. Verify and load server ephermal key
         let server_answer_plain = null;
@@ -148,7 +159,7 @@ class ClientSecurityContext extends events.EventEmitter {
 
         // 5. Save sharedsecret, and clean up
         this.#accept_sharedsecret(shared_secret);
-        this.emit("secure.ready");
+        this.emit("secured");
     }
 
 }

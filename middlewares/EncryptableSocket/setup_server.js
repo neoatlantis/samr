@@ -65,7 +65,6 @@ module.exports = async (private_key)=>{
             sc.on("secure.data", (arg)=>{
                 socket.emit("secure.data", arg);
             });
-
         }
         if(next) next();
     }

@@ -2,7 +2,10 @@ const ClientIO = require("socket.io-client");
 const server = require("../server");
 const nacl = require("tweetnacl");
 
-const encryption_for_client = require("../middlewares/EncryptableSocket/setup_client");
+const encryption_for_client = require("../middlewares/EncryptableSocket/setup_client")(async function security_consulatant(consulting){
+    console.log("Consulting:", consulting);
+    return true;
+});
 
 // require("openpgp").generateKey({ type: "ecc", curve: "curve25519", userIDs: [{ name: "test" }], format: "armored" }).then(({ privateKey })=>console.log(privateKey))
 
@@ -31,17 +34,10 @@ client.on("connect", function(){
     console.log("client connected...");
 });
 
-
 client.on("disconnect", function(){
     console.log("disconnected");
 });
 
-client.on("secure.ready", function(){
+client.on("secured", function(){
     console.log("client connection secured.");
-
-    client.emit("test", 1, 2, 3, {test:'hello'});
-})
-
-client.on("test-reply", (a,b,c,d)=>{
-    console.log("received server test-reply", a,b,c,d);
 })

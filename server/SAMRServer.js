@@ -24,6 +24,7 @@ class SAMRServer {
     #on_connection(socket){
 
         socket.on("disconnect", ()=>{
+            console.log("remove all isteners");
             socket.removeAllListeners();
         });
 
@@ -34,10 +35,10 @@ class SAMRServer {
             }
         });
 
-        socket.on("test", (a,b,c,d)=>{
-            console.log("server test", a,b,c,d);
-            socket.emit("test-reply", 1,2,3,4);
+        socket.on("secured", ()=>{
+            console.log("server socket.secured");
         })
+
 
     }
 
