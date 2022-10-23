@@ -38,6 +38,7 @@ module.exports = (security_consultant)=>(socket) => {
         if(_.includes(reserved_events, event)){
             return socket[on](event, handler);
         }
+        console.log("client listener added to SecurityContext", event, handler);
         return sc.on(event, handler);
     };
 

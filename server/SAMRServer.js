@@ -45,6 +45,34 @@ class SAMRServer extends events.EventEmitter {
 
     #on_secured(socket){
 
+        // --- topic management
+
+        socket.on("topic.subscribe", (room)=>{
+            if(!_.isString(room)) return socket.emit("error.topic.invalid");
+            // TODO authenticate socket
+            socket.join(room);
+            socket.emit("topic.subscribed", room);
+        });
+
+        socket.on("topic.unsubscribe", (room)=>{
+            if(!_.isString(room)) return socket.emit("error.topic.invalid");
+            socket.leave(room);
+            socket.emit("topic.unsubscribed", room);
+        });
+
+        socket.on("topic.publish", async (room, data)=>{
+            if(!_.isString(room)) return socket.emit("error.topic.invalid");
+            // TODO check socket authentication
+            if(_.get(data, "type") != "event"){
+                return;
+            }
+            let uuid = _.get(data, "uuid");
+            let realdata = _.get(data, "data");
+            let sockets = await this.#io.in(room).fetchSockets();
+            sockets.forEach((s)=>s.emit("topic.event", room, realdata));
+            socket.emit("topic.published", uuid);
+        });
+
         this.emit("secure-connection", socket);
     }
 
