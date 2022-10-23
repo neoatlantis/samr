@@ -20,6 +20,8 @@ module.exports = (security_consultant)=>(socket) => {
     socket[removeEventListener] = socket.removeEventListener;
     socket[removeListener] = socket.removeListener;
 
+    socket.get_session_id = ()=>sc.get_session_id();
+
     socket.emit = (event, ...args) => {
         if(_.includes(reserved_events, event)){
             return socket[emit](event, ...args);

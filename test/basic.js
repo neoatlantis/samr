@@ -1,5 +1,5 @@
 const ClientIO = require("socket.io-client");
-const server = require("../server");
+const { initialize: server_init } = require("../server");
 const nacl = require("tweetnacl");
 
 const encryption_for_client = require("../middlewares/EncryptableSocket/setup_client")(async function security_consulatant(consulting){
@@ -9,7 +9,7 @@ const encryption_for_client = require("../middlewares/EncryptableSocket/setup_cl
 
 // require("openpgp").generateKey({ type: "ecc", curve: "curve25519", userIDs: [{ name: "test" }], format: "armored" }).then(({ privateKey })=>console.log(privateKey))
 
-server.initialize({ private_key: `
+const server = server_init({ private_key: `
 -----BEGIN PGP PRIVATE KEY BLOCK-----
 
 xVgEY1QomRYJKwYBBAHaRw8BAQdA919J2UY6oxlAzZEfcrer48Id0spRKgmi
@@ -40,4 +40,13 @@ client.on("disconnect", function(){
 
 client.on("secured", function(){
     console.log("client connection secured.");
+    client.emit("test", "hello world");
+});
+
+
+server.on("secure-connection", (socket)=>{
+    console.log("Server new connection secured, session id=", socket.get_session_id());
+    socket.on("test", (e)=>{
+        console.log("Test message", e);
+    })
 })

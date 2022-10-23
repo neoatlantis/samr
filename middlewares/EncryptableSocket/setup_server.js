@@ -46,6 +46,8 @@ module.exports = async (private_key)=>{
 
             socket[emit] = socket.emit;
 
+            socket.get_session_id = ()=>sc.get_session_id();
+
             // intercept outgoing events by replacing socket.emit function
             socket.emit = (event, ...args) => {
                 if(_.includes(reserved_events, event)){

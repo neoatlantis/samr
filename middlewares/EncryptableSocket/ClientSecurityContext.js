@@ -12,6 +12,7 @@ class ClientSecurityContext extends events.EventEmitter {
     #ephermal_secret_key;
     #cipher;
     #security_consultant;
+    #session_id;
 
     constructor(security_consultant){
         super();
@@ -22,16 +23,22 @@ class ClientSecurityContext extends events.EventEmitter {
         this.#reset();
     }
 
+    get_session_id(){ return this.#session_id }
+
     #reset(){
         this.#encryption_started = false;
         this.#ephermal_secret_key = null;
         this.#cipher = null;
+        this.#session_id = null;
     }
 
     #accept_sharedsecret(shared_secret){
         this.#cipher = new SymmetricCipher(shared_secret);
         this.#ephermal_secret_key = null;
         this.#encryption_started = true;
+        this.#session_id = Buffer.from(
+            nacl.hash(shared_secret).slice(0, 8)
+        ).toString("hex");
     }
 
     async handle_incoming(event, ...args){

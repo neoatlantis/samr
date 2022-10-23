@@ -13,6 +13,7 @@ class ServerSecurityContext extends events.EventEmitter {
     #pgp_private_key;
     #pgp_public_key_binary;
     #cipher;
+    #session_id;
 
     constructor(pgp_private_key, pgp_public_key_binary){
         super();
@@ -22,9 +23,14 @@ class ServerSecurityContext extends events.EventEmitter {
         this.#pgp_public_key_binary = pgp_public_key_binary;
     }
 
+    get_session_id(){ return this.#session_id }
+
     #accept_sharedsecret(shared_secret){
         this.#cipher = new SymmetricCipher(shared_secret);
         this.#encryption_started = true;
+        this.#session_id = Buffer.from(
+            nacl.hash(shared_secret).slice(0, 8)
+        ).toString("hex");
     }
 
     async handle_incoming(args){
