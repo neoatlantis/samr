@@ -24,8 +24,8 @@ class SAMRServer extends events.EventEmitter {
             await this.#authenticator.initialize(signing_keys);
         }
 
-        let encryptable_socket = await encryption_for_server(private_key);
-        this.#io.use(encryptable_socket);
+        //let encryptable_socket = await encryption_for_server(private_key);
+        //this.#io.use(encryptable_socket);
         this.#io.on("connection", (s)=>this.#on_connection(s));
     }
 
