@@ -1,5 +1,8 @@
 const createOpenPGPCertIssuer = require("../libs/openpgp-auth/OpenPGPCertIssuer");
 const createOpenPGPCertReader = require("../libs/openpgp-auth/OpenPGPCertReader");
+const make_proof = require("../libs/openpgp-auth/make_proof");
+const verify_proof = require("../libs/openpgp-auth/verify_proof");
+
 const openpgp = require("openpgp");
 
 const key = `
@@ -23,24 +26,33 @@ sgqqggA=
 async function run(){
 
     let issuer = await createOpenPGPCertIssuer(key);
-    let publicKey = (await openpgp.readKey({ armoredKey: key })).toPublic().armor();
+    let publicKey = (await openpgp.readKey({ armoredKey: key })).toPublic();
+    let publicKeyArmored = publicKey.armor();
 
-    let result = await issuer
-        .bearer_fingerprint("bearer-fingerprint")
+    let cert = await issuer
+        .bearer_fingerprint(publicKey.getFingerprint())
         .validity_duration(365*86400)
         .tag("auth.topic.r.generic-topic1")
         .tag("auth.topic.r.generic-topic2")
     .go();
 
     console.log("######### created cert as below");
-    console.log(result);
+    console.log(cert);
     console.log("\n######### done ");
 
-    let reader = await createOpenPGPCertReader(publicKey);
-    let read_result = await reader.read(result);
 
-    console.log(read_result);
-    console.log(read_result.get_tags_with_wildcard("auth.topic.*"));
+    let made_proof = await make_proof({
+        claim: "test claim",
+        cert: cert,
+        private_key_armored: key,
+    });
+
+    let verified_proof = await verify_proof(made_proof, publicKeyArmored);
+
+    console.log(verified_proof.json());
+
+
+
 
 }
 run();

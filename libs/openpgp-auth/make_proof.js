@@ -2,16 +2,16 @@ const msgpack = require("msgpack-lite");
 const openpgp = require("openpgp");
 
 
-module.exports = async function({ proof, cert, private_key_armored }){
+module.exports = async function({ claim, cert, private_key_armored }){
     let private_key = await openpgp.readKey({ armoredKey: private_key_armored });
-    let public_key = private_key.toPublic();
+    let public_key = private_key.toPublic().write();
     let payload = msgpack.encode({
-        proof: Buffer.from(proof, 'utf-8'),
-        cert: Buffer.from(cert, 'utf-8'),
+        claim: claim,
+        cert: cert,
     });
 
     let signed_payload = await openpgp.sign({
-        message: await openpgp.createMessage({ binaryMessage: payload }),
+        message: await openpgp.createMessage({ binary: payload }),
         signingKeys: private_key,
         format: "binary",
     });

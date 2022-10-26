@@ -16,20 +16,28 @@ class SAMRServer extends events.EventEmitter {
         this.#init(args);
     }
 
-    async #init({ io, private_key, signing_keys }){
-        this.#io = io;
+    async #init({ ssl_cert, ssl_private_key, port=2222 }){
+        this.https_server = require("https").createServer({
+            cert: ssl_cert,
+            key: ssl_private_key,
+        });
+        this.#io = require("socket.io")(this.https_server);
 
-        this.#authenticator = new ClientAuthenticator();
+        /*this.#authenticator = new ClientAuthenticator();
         if(signing_keys){
             await this.#authenticator.initialize(signing_keys);
-        }
+        }*/
 
         //let encryptable_socket = await encryption_for_server(private_key);
         //this.#io.use(encryptable_socket);
         this.#io.on("connection", (s)=>this.#on_connection(s));
+
+        this.https_server.listen(port);
     }
 
     #on_connection(socket){
+        console.log("New connection", socket.id);
+
         socket.on("disconnect", ()=>{
             console.log("remove all isteners");
             socket.removeAllListeners();
@@ -40,10 +48,10 @@ class SAMRServer extends events.EventEmitter {
                 socket.disconnect();
             }
         });
-        socket.on("secured", ()=>this.#on_secured(socket));
+        this.#on_ready(socket);
     }
 
-    #on_secured(socket){
+    #on_ready(socket){
 
         // --- topic management
 
@@ -73,7 +81,6 @@ class SAMRServer extends events.EventEmitter {
             socket.emit("topic.published", uuid);
         });
 
-        this.emit("secure-connection", socket);
     }
 
 

@@ -1,14 +1,18 @@
 const ClientIO = require("socket.io-client");
+const fs = require("fs");
 const nacl = require("tweetnacl");
 
-const encryption_for_client = require("../middlewares/EncryptableSocket/setup_client")(async function security_consulatant(consulting){
+/*const encryption_for_client = require("../middlewares/EncryptableSocket/setup_client")(async function security_consulatant(consulting){
     console.log("Consulting:", consulting);
     return true;
-});
+});*/
 
 
-const client = ClientIO("ws://localhost:2222", { reconnection: true });
-encryption_for_client(client);
+const client = ClientIO("wss://localhost:2222", {
+    reconnection: true,
+    ca: fs.readFileSync("./keymaterials/cert.pem"),
+ });
+//encryption_for_client(client);
 
 client.on("connect", function(){
     console.log("client connected...");
