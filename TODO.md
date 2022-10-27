@@ -20,8 +20,8 @@ implemented.
 
 3. Pub/sub and RPC happen under same topic, which is created as a Socket.io
 chat room. Different members within this room may publish 3 kinds of
-messages. The user cert describes which of these types are authorized for a
-given user.
+messages. The user cert describes (1) which rooms the user may join, and (2)
+which of these types are authorized for given user in a specific room.
 
  - `event`, which is a one-shot message published by one party. No parties
    should expect to receive missed events. The server will broadcast the
