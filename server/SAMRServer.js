@@ -1,6 +1,7 @@
 const _ = require("lodash");
 const events = require("events");
 const ClientAuthenticator = require("./ClientAuthenticator");
+const protohandlers = require("./protohandlers");
 
 const encryption_for_server =
     require('../middlewares/EncryptableSocket/setup_server');
@@ -8,7 +9,7 @@ const encryption_for_server =
 
 class SAMRServer extends events.EventEmitter {
 
-    #io;
+    io;
     #authenticator;
 
     constructor(args){
@@ -21,7 +22,7 @@ class SAMRServer extends events.EventEmitter {
             cert: ssl_cert,
             key: ssl_private_key,
         });
-        this.#io = require("socket.io")(this.https_server);
+        this.io = require("socket.io")(this.https_server);
 
         /*this.#authenticator = new ClientAuthenticator();
         if(signing_keys){
@@ -29,8 +30,8 @@ class SAMRServer extends events.EventEmitter {
         }*/
 
         //let encryptable_socket = await encryption_for_server(private_key);
-        //this.#io.use(encryptable_socket);
-        this.#io.on("connection", (s)=>this.#on_connection(s));
+        //this.io.use(encryptable_socket);
+        this.io.on("connection", (s)=>this.#on_connection(s));
 
         this.https_server.listen(port);
     }
@@ -55,31 +56,13 @@ class SAMRServer extends events.EventEmitter {
 
         // --- topic management
 
-        socket.on("topic.subscribe", (room)=>{
-            if(!_.isString(room)) return socket.emit("error.topic.invalid");
-            // TODO authenticate socket
-            socket.join(room);
-            socket.emit("topic.subscribed", room);
-        });
+        for(let event_name in protohandlers){
+            socket.on(
+                event_name,
+                protohandlers[event_name].bind(this, socket)
+            );
+        }
 
-        socket.on("topic.unsubscribe", (room)=>{
-            if(!_.isString(room)) return socket.emit("error.topic.invalid");
-            socket.leave(room);
-            socket.emit("topic.unsubscribed", room);
-        });
-
-        socket.on("topic.publish", async (room, data)=>{
-            if(!_.isString(room)) return socket.emit("error.topic.invalid");
-            // TODO check socket authentication
-            if(_.get(data, "type") != "event"){
-                return;
-            }
-            let uuid = _.get(data, "uuid");
-            let realdata = _.get(data, "data");
-            let sockets = await this.#io.in(room).fetchSockets();
-            sockets.forEach((s)=>s.emit("topic.event", room, realdata));
-            socket.emit("topic.published", uuid);
-        });
 
     }
 
