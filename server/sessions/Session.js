@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const constants = require("../constants");
+const _ = require("lodash");
 
 class Session {
 
@@ -9,6 +10,10 @@ class Session {
     #store;
 
     constructor(user_id){
+        if(!_.isString(user_id)){
+            throw Error("Session must be created with user_id string.");
+        }
+
         this.#id = uuidv4();
         this.#authorized_userid = userid;
         this.#store = new Map();
@@ -17,8 +22,14 @@ class Session {
 
     get_id(){ return this.#id }
 
-    reactivate(){
+    reactivate(check_user_id){
+        if(check_user_id != this.#authorized_userid) return false;
         this.#last_checkin = new Date().getTime();
+        return true;
+    }
+
+    get_userid(){
+        return this.#authorized_userid;
     }
 
     is_expired(){

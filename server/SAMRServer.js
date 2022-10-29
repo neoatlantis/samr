@@ -2,6 +2,7 @@ const _ = require("lodash");
 const events = require("events");
 const ClientAuthenticator = require("./ClientAuthenticator");
 const protohandlers = require("./protohandlers");
+const openpgp = require("openpgp");
 
 const encryption_for_server =
     require('../middlewares/EncryptableSocket/setup_server');
@@ -10,6 +11,8 @@ const encryption_for_server =
 class SAMRServer extends events.EventEmitter {
 
     io;
+    authority_public_keys = [];
+
     #authenticator;
 
     constructor(args){
@@ -17,12 +20,21 @@ class SAMRServer extends events.EventEmitter {
         this.#init(args);
     }
 
-    async #init({ ssl_cert, ssl_private_key, port=2222 }){
+    async #init({
+        ssl_cert,
+        ssl_private_key,
+        authority_public_keys,
+        port=2222
+    }){
         this.https_server = require("https").createServer({
             cert: ssl_cert,
             key: ssl_private_key,
         });
         this.io = require("socket.io")(this.https_server);
+        
+        this.authority_public_keys = await openpgp.readKeys({
+            armoredKeys: authority_public_keys,
+        });
 
         /*this.#authenticator = new ClientAuthenticator();
         if(signing_keys){

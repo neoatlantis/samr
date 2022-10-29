@@ -22,11 +22,10 @@ class SessionManager {
         return session_id;
     }
 
-    reactivate_session(session_id){
+    reactivate_session(session_id, check_user_id){
         this.clean_sessions();
         if(this.#sessions.has(session_id)){
-            this.#sessions.get(session_id).reactivate();
-            return true;
+            return this.#sessions.get(session_id).reactivate(check_user_id);
         }
         return false;
     }

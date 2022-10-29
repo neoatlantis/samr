@@ -22,6 +22,23 @@ class OpenPGPProofResult {
         }
     }
 
+    is_success(){
+        return !this.#error;
+    }
+
+    get_claim(){
+        return this.#claim;
+    }
+
+    get_cert(){
+        return this.#cert_parsed;
+    }
+
+    get_error_reason(){
+        if(!this.#error) return "";
+        return this.#reason;
+    }
+
     json(){
         if(this.#error){
             return {
@@ -92,7 +109,6 @@ module.exports = async function(proof, issuer_public_key){
     if(cert_parsed.get_bearer_fingerprint() != public_key.getFingerprint()){
         return new OpenPGPProofResult("Cert not issued to signing public key.");
     }
-    console.log(cert_parsed);
 
     return new OpenPGPProofResult(null, {
         claim: signed_obj.claim,
