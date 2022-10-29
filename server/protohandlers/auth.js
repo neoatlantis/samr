@@ -39,7 +39,11 @@ module.exports = async function(socket, data){
     let cert  = proof_result.get_cert();
 
     let claim_conn_id = _.get(claim, "conn", "");
-    let claim_session_id = _.get(claim, "session", "");
+    let claim_session_id = _.get(
+        claim,
+        "session",
+        _.get(socket, "session_id", "")
+     );
     let claim_timestamp = _.get(claim, "time", new Date(0));
 
     // user must claim for the current connection explicitly, otherwise it might
@@ -63,7 +67,7 @@ module.exports = async function(socket, data){
     // otherwise, we can accept user cert basically
 
     let userid = cert.get_id();
-    socket.usercert = cert;
+    socket.usercert = cert; // class OpenPGPCertResult
 
     // we try to find if user can claim the given session id
 
