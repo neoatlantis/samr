@@ -31,7 +31,7 @@ class SAMRServer extends events.EventEmitter {
             key: ssl_private_key,
         });
         this.io = require("socket.io")(this.https_server);
-        
+
         this.authority_public_keys = await openpgp.readKeys({
             armoredKeys: authority_public_keys,
         });
@@ -69,13 +69,31 @@ class SAMRServer extends events.EventEmitter {
         // --- topic management
 
         for(let event_name in protohandlers){
-            socket.on(
-                event_name,
-                protohandlers[event_name].bind(this, socket)
-            );
+            let decorated_handler = this.#_decorate_handler(
+                protohandlers[event_name]);
+            socket.on(event_name, decorated_handler.bind(this, socket));
         }
 
+    }
 
+    #_decorate_handler(original_func){
+        const self = this;
+        let flag_require_session = original_func.require_session;
+
+        let call_fns = [];
+        if(flag_require_session) call_fns.push(this.#_decorator_require_session);
+
+        let decorating_func = function(){
+            for(let fn of call_fns){
+                if(!fn.apply(self, arguments)) return;
+            }
+            original_func.apply(self, arguments);
+        }
+        return decorating_func;
+    }
+
+    #_decorator_require_session(socket){
+        return !_.isNil(_.get(socket, "session_id", null));
     }
 
 
