@@ -45,3 +45,5 @@ class SessionManager {
     }
 
 }
+
+module.exports = SessionManager;

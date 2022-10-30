@@ -1,7 +1,7 @@
 const _ = require("lodash");
-const constants = require("../../constants");
+const constants = require("../constants");
 const verify_proof = require("../../libs/openpgp-auth/verify_proof");
-const session_manager = require("../session");
+const session_manager = require("../sessions");
 
 
 module.exports = async function(socket, data){
@@ -59,7 +59,10 @@ module.exports = async function(socket, data){
         return reject("Invalid timestamp field in user claim.");
     }
     let claim_timestamp_diff = now.getTime() - claim_timestamp.getTime();
-    if(Math.abs(claim_timestamp_diff) > constants.TIME_INACCURATITY_TOLERANCE){
+    if(
+        Math.abs(claim_timestamp_diff / 1000) >
+        constants.TIME_INACCURATITY_TOLERANCE
+    ){
         return reject(
             "User claim timestamp not accepted. Check client time setting.")
     }
@@ -76,7 +79,7 @@ module.exports = async function(socket, data){
     }
 
     let new_session_id = null;
-    if(sessions.reactivate_session(claim_session_id, userid){
+    if(session_manager.reactivate_session(claim_session_id, userid)){
         // successfully reactivated session
         new_session_id = claim_session_id;
     } else {

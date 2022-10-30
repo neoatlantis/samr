@@ -82,6 +82,9 @@ class OpenPGPCertReader{
 
 
 module.exports = async function (verifying_keys_armored){
-    let ks = await openpgp.readKeys({ armoredKeys: verifying_keys_armored });
+    let ks = verifying_keys_armored;
+    if(_.isString(ks)){
+        ks = await openpgp.readKeys({ armoredKeys: verifying_keys_armored });
+    }
     return new OpenPGPCertReader(ks);
 }

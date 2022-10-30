@@ -15,7 +15,7 @@ class Session {
         }
 
         this.#id = uuidv4();
-        this.#authorized_userid = userid;
+        this.#authorized_userid = user_id;
         this.#store = new Map();
         this.reactivate();
     }
@@ -54,3 +54,5 @@ class Session {
     }
 
 }
+
+module.exports = Session;
