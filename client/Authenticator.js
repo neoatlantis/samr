@@ -33,6 +33,10 @@ class Authenticator {
         this.#session_id = i;
     }
 
+    remove_session_id(){
+        this.#session_id = null;
+    }
+
 }
 
 

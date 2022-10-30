@@ -3,6 +3,7 @@ const events = require("events");
 const ClientAuthenticator = require("./ClientAuthenticator");
 const protohandlers = require("./protohandlers");
 const openpgp = require("openpgp");
+const session_manager = require("./sessions");
 
 const encryption_for_server =
     require('../middlewares/EncryptableSocket/setup_server');
@@ -60,7 +61,7 @@ class SAMRServer extends events.EventEmitter {
             if(err && _.startsWith(err.message, "fatal.")){
                 socket.disconnect();
             }
-        });
+        })  ;
         this.#on_ready(socket);
     }
 
@@ -93,7 +94,20 @@ class SAMRServer extends events.EventEmitter {
     }
 
     #_decorator_require_session(socket){
-        return !_.isNil(_.get(socket, "session_id", null));
+        try{
+            let socket_session_id = _.isNil(_.get(socket, "session_id", null));
+            let socket_session = session_manager.get_session(socket_session_id);
+            if(_.isNil(socket_session)) throw Error("Requires authentication.");
+            if(socket_session.is_expired()){
+                socket.emit("fatal.session.expired");
+                return false;
+            }
+        } catch(e){
+            // no available session, emit error
+            socket.emit("auth.failure", { reason: e.message });
+            return false;
+        }
+        return true;
     }
 
 

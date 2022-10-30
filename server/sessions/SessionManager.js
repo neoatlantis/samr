@@ -1,4 +1,5 @@
 const Session = require("./Session");
+const _ = require("lodash");
 
 class SessionManager {
 
@@ -31,6 +32,7 @@ class SessionManager {
     }
 
     get_session(session_id){
+        if(!_.isString(session_id)) return null;
         return this.#sessions.get(session_id);
     }
 

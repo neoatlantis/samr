@@ -35,13 +35,31 @@ class SAMRClient extends events.EventEmitter {
     }
 
     #on_connection(){
+        const socket = this.#socket;
         console.log("connected");
 
-        this.#socket.on("auth.success", console.log);
-        this.#socket.on("auth.failure", console.error);
+        socket.on("error", (err)=>{
+            console.error("Socket error received!", err);
+            if(err && _.startsWith(err.message, "fatal.")){
+                socket.disconnect();
+            }
+        });
+
+        socket.on("auth.success", (e)=>this.#on_auth_success(e));
+        socket.on("auth.failure", console.error);
 
         this.#do_auth();
+    }
 
+
+    #on_auth_success({ session_id }){
+        console.log("Authenticatd to session:", session_id);
+        this.#authenticator.set_session_id(session_id);
+    }
+
+    #on_auth_failure({ reason }){
+        this.#authenticator.remove_session_id();
+        setTimeout(()=>this.#do_auth(), 5000);
     }
 
 
