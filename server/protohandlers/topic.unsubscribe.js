@@ -13,3 +13,5 @@ module.exports = function(socket, data){
         $REF(room, request.uuid())
     );
 };
+
+module.exports.require_session = true;

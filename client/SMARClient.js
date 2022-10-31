@@ -84,6 +84,15 @@ class SAMRClient extends events.EventEmitter {
         // TODO make this a promise using given uuid
     }
 
+    // ---- publish to topic
+
+    async publish(topic, data){
+        let referenced = $REF({
+            topic, data
+        });
+        this.socket.emit($E("topic.publish"), referenced);
+    }
+
 
 }
 
