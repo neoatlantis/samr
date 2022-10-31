@@ -19,7 +19,7 @@ const client = new SAMRClient({
 });
 
 client.socket.onAny((event, args)=>{
-    console.error("> ", event, args);
+    console.error("| ", event, args);
 })
 
 client.once("authenticated", ()=>{

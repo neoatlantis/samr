@@ -58,7 +58,9 @@ class SAMRClient extends events.EventEmitter {
 
     async #do_auth(){
         let proof = await this.#authenticator.authenticate(this.socket.id);
-        this.socket.emit("auth", proof);
+        let referenced = $REF(proof);
+        console.log("Send auth proof, uuid=" + referenced.uuid());
+        this.socket.emit("auth", referenced.data());
     }
 
     #on_auth_success(response){
@@ -75,7 +77,7 @@ class SAMRClient extends events.EventEmitter {
 
     // ---- subscribe/unsubscribe to topic
 
-    subscribe(topic){
+    async subscribe(topic){
         let referenced = $REF(topic);
         let uuid = referenced.uuid();
         this.socket.emit($E("topic.subscribe"), referenced.data());
