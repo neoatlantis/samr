@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const { $E, $ERR } = require("../../protodef");
+const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
 
 
 module.exports = function(socket, room){

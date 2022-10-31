@@ -1,16 +1,23 @@
 const _ = require("lodash");
+const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
+
 const constants = require("../constants");
 const verify_proof = require("../../libs/openpgp-auth/verify_proof");
 const session_manager = require("../sessions");
 
 
-module.exports = async function(socket, data){
+
+module.exports = async function(socket, orig_data){
+    let request = $DEREF(orig_data);
+    let data = request.data();
+
     const now = new Date();
 
     function reject(reason){
-        socket.emit("auth.failure", {
-            reason,
-        })
+        socket.emit(
+            $E("auth.failure"),
+            $REF({ reason }, request.uuid()).data()
+        );
     }
 
     // data is encoded in base64
@@ -88,8 +95,9 @@ module.exports = async function(socket, data){
 
     socket.session_id = new_session_id;
 
-    socket.emit("auth.success", {
-        session_id: new_session_id,
-    })
+    socket.emit(
+        $E("auth.success"),
+        $REF({ session_id: new_session_id }, request.uuid()).data()
+    );
 
 };

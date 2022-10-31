@@ -61,7 +61,8 @@ class SAMRClient extends events.EventEmitter {
         this.socket.emit("auth", proof);
     }
 
-    #on_auth_success({ session_id }){
+    #on_auth_success(response){
+        let { session_id } = $DEREF(response).data();
         console.log("Authenticatd to session:", session_id);
         this.#authenticator.set_session_id(session_id);
         this.emit("authenticated");
