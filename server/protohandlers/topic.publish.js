@@ -1,4 +1,5 @@
 const _ = require("lodash");
+const { $E, $ERR } = require("../../protodef");
 
 
 module.exports = async function(socket, room, data){
@@ -7,9 +8,9 @@ module.exports = async function(socket, room, data){
     if(_.get(data, "type") != "event"){
         return;
     }
-    let uuid = _.get(data, "uuid");
+    let ref = _.get(data, "$ref");
     let realdata = _.get(data, "data");
     let sockets = await this.io.in(room).fetchSockets();
-    sockets.forEach((s)=>s.emit("topic.event", room, realdata));
-    socket.emit("topic.published", uuid);
+    sockets.forEach((s)=>s.emit($E("topic.event"), room, realdata));
+    socket.emit($E("topic.published"), uuid);
 };

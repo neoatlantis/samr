@@ -2,10 +2,13 @@ const _ = require("lodash");
 const { io } = require("socket.io-client");
 const events = require("events");
 const Authenticator = require("./Authenticator");
+const { $E, $ERR, $REF, $DEREF } = require("../protodef");
+
+
 
 class SAMRClient extends events.EventEmitter {
 
-    #socket;
+    socket;
     #authenticator;
 
     constructor(args){
@@ -19,23 +22,19 @@ class SAMRClient extends events.EventEmitter {
         cert,
         private_key_armored
     }){
-        this.#socket = io(url, socket_io_options);
+        this.socket = io(url, socket_io_options);
 
         this.#authenticator = new Authenticator({
             cert, private_key_armored
         });
 
-        this.#socket.on("connect", (s)=>this.#on_connection());
+        this.socket.on("connect", (s)=>this.#on_connection());
+        this.socket.io.on("reconnect", (s)=>this.#on_reconnect());
     }
 
-    async #do_auth(){
-        let proof = await this.#authenticator.authenticate(this.#socket.id);
-
-        this.#socket.emit("auth", proof);
-    }
 
     #on_connection(){
-        const socket = this.#socket;
+        const socket = this.socket;
         console.log("connected");
 
         socket.on("error", (err)=>{
@@ -51,10 +50,21 @@ class SAMRClient extends events.EventEmitter {
         this.#do_auth();
     }
 
+    #on_reconnect(){
+        this.#do_auth();
+    }
+
+    // ---- authenticator
+
+    async #do_auth(){
+        let proof = await this.#authenticator.authenticate(this.socket.id);
+        this.socket.emit("auth", proof);
+    }
 
     #on_auth_success({ session_id }){
         console.log("Authenticatd to session:", session_id);
         this.#authenticator.set_session_id(session_id);
+        this.emit("authenticated");
     }
 
     #on_auth_failure({ reason }){
@@ -62,6 +72,14 @@ class SAMRClient extends events.EventEmitter {
         setTimeout(()=>this.#do_auth(), 5000);
     }
 
+    // ---- subscribe/unsubscribe to topic
+
+    subscribe(topic){
+        let referenced = $REF(topic);
+        let uuid = referenced.uuid();
+        this.socket.emit($E("topic.subscribe"), referenced.data());
+        // TODO make this a promise using given uuid
+    }
 
 
 }
