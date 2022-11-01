@@ -24,7 +24,14 @@ client.socket.onAny((event, args)=>{
 
 client.once("authenticated", ()=>{
 
-    client.subscribe("topic.abcd.efg");
     client.subscribe("topic.r.generic-topic1");
 
+    setTimeout(()=>{
+        client.publish("topic.r.generic-topic1", { hello: "world" });
+    }, 1000);
+
 });
+
+client.topics.on("topic.r.generic-topic1", (data, uuid)=>{
+    console.log("Incoming topic / topic.r.generic-topic1", uuid, data);
+})

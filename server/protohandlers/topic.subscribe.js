@@ -7,20 +7,13 @@ module.exports = function (socket, request_data){
 
     if(!_.isString(room)){
         return socket.emit(
-            "error.topic.invalid",
+            $ERR("error.topic.invalid"),
             $REF(null, request.uuid()).data()
         );
     }
 
-    // authenticate socket
-    let usercert = _.get(socket, "usercert");
-    if(!usercert){
-        return socket.emit(
-            $ERR("error.auth.unauthenticated"),
-            $REF(null, request.uuid()).data()
-        );
-    }
-    if(!usercert.has_tag("auth." + room)){
+    // Check socket authorization
+    if(!socket.usercert.has_tag("subscribe." + room)){
         socket.emit(
             $ERR("error.auth.insufficient"),
             $REF(null, request.uuid()).data()

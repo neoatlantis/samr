@@ -32,8 +32,9 @@ async function run(){
     let cert = await authority
         .bearer_fingerprint(bearer_public_key.getFingerprint())
         .validity_duration(365*86400)
-        .tag("auth.topic.r.generic-topic1")
-        .tag("auth.topic.r.generic-topic2")
+        .tag("subscribe.topic.r.generic-topic1")
+        .tag("publish.topic.r.generic-topic1")
+        .tag("publish.topic.r.generic-topic2")
     .go();
 
     console.log("######### created cert as below");

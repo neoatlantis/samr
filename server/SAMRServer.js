@@ -96,7 +96,13 @@ class SAMRServer extends events.EventEmitter {
         try{
             let socket_session_id = _.get(socket, "session_id", null);
             let socket_session = session_manager.get_session(socket_session_id);
-            if(_.isNil(socket_session)) throw Error("Requires authentication.");
+            let socket_usercert = _.get(socket, "usercert", null);
+            if(
+                _.isNil(socket_session) ||
+                _.isNil(socket_usercert)
+            ){
+                throw Error("Requires authentication.");
+            }
             if(socket_session.is_expired()){
                 socket.emit("fatal.session.expired");
                 return false;

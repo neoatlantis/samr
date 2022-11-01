@@ -8,11 +8,15 @@ const { $E, $ERR, $REF, $DEREF } = require("../protodef");
 
 class SAMRClient extends events.EventEmitter {
 
-    socket;
     #authenticator;
+    socket;
+
+    topics; // emitter of incoming topic events
 
     constructor(args){
         super();
+        this.topics = new events.EventEmitter();
+
         this.#init(args);
     }
 
@@ -46,6 +50,7 @@ class SAMRClient extends events.EventEmitter {
 
         socket.on("auth.success", (e)=>this.#on_auth_success(e));
         socket.on("auth.failure", console.error);
+        socket.on("topic.event", this.#on_topic_event.bind(this));
 
         this.#do_auth();
     }
@@ -90,7 +95,16 @@ class SAMRClient extends events.EventEmitter {
         let referenced = $REF({
             topic, data
         });
-        this.socket.emit($E("topic.publish"), referenced);
+        this.socket.emit($E("topic.publish"), referenced.data());
+    }
+
+    // ---- handler for incoming event
+
+    async #on_topic_event(request_data){
+        let request = $DEREF(request_data);
+        let { topic, data } = (request.data() || {});
+
+        this.topics.emit(topic, data, request.uuid());
     }
 
 
