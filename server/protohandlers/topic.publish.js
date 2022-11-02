@@ -13,15 +13,19 @@ module.exports = async function(socket, request_data){
         );
     }
 
+    let room = "pubsub." + topic;
+
     // Check socket authorization
-    if(!socket.usercert.has_tag("publish." + topic)){
+    if(!(
+        socket.rooms.has(room) &&
+        socket.usercert.has_tag("publish." + topic)
+    )){
         socket.emit(
             $ERR("error.auth.insufficient"),
             $REF(null, request.uuid()).data()
         );
         return;
     }
-
 
     // Return (will be) published event
 
@@ -32,7 +36,7 @@ module.exports = async function(socket, request_data){
 
     // Broadcast events
 
-    this.io.in(topic).emit(
+    socket.to(room).emit(
         $E("topic.event"),
         $REF({ topic, data }).data()
     );

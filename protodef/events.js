@@ -10,4 +10,7 @@ module.exports = [
     'topic.publish',
     'topic.published',
     'topic.event',
+
+    'topic.invoke',
+    
 ];
