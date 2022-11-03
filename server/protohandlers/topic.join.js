@@ -28,7 +28,7 @@ module.exports = async function(socket, request_data){
     if(type == "rpc"){
         authorized = (
             socket.usercert.has_tag("call." + topic) ||
-            socket.usercert.has_tag("answer." + topic)
+            socket.usercert.has_tag("yield." + topic)
         );
         room_name = "rpc." + topic;
     }

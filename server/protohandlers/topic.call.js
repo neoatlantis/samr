@@ -1,4 +1,5 @@
 const _ = require("lodash");
+const rpc_router_table = require("../rpc_router_table");
 const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
 
 
@@ -48,15 +49,25 @@ module.exports = async function(socket, request_data){
         Math.floor(Math.random(0, sockets_in_room.length))
     ];
 
-    let invocation_id = request.uuid();
+    // Create new invocation
 
-    // TODO add (caller session_id, callee session id, invocation_id) to
-    // rpc router table
+    let invocation = $REF({ data });
+    let invocation_id = invocation.uuid();
+    rpc_router_table.add_record({
+        uuid: invocation_id,
+        sender:   socket.session_id,
+        receiver: choosen_socket.session_id,
+    });
 
     choosen_socket.emit(
         $E("topic.invoke"),
-        $REF({ data }, invocation_id).data()
+        new_event.data()
     );
+
+    socket.emit(
+        $E("topic.called"),
+        $REF(invocation_id, request.uuid()).data()
+    )
 };
 
 module.exports.require_session = true;
