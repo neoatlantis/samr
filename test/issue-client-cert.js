@@ -34,6 +34,8 @@ async function run(){
         .validity_duration(365*86400)
         .tag("subscribe.topic.r.generic-topic1")
         .tag("publish.topic.r.generic-topic1")
+        .tag("call.topic.r.generic-topic1")
+        .tag("yield.topic.r.generic-topic1")
         .tag("publish.topic.r.generic-topic2")
     .go();
 
