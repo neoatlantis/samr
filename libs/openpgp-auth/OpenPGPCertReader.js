@@ -55,10 +55,18 @@ class OpenPGPCertReader{
             _.isString(_.get(obj, "bearer"))                                &&
             _.isDate(_.get(obj, "validity.start"))                          &&
             _.isDate(_.get(obj, "validity.end"))                            &&
-            _.isArray(_.get(obj, "tags"))                                   &&
-            _.get(obj, "tags").every(_.isString)
+            _.isPlainObject(_.get(obj, "tags"))
         );
         if(!format_validity) return null;
+
+        for(let tag_name in obj.tags){
+            if(
+                !_.isArray(obj.tags[tag_name]) ||
+                !obj.tags[tag_name].every(_.isString)
+            ){
+                return null;
+            }
+        }
 
         const nowtime = new Date().getTime();
         if(!(

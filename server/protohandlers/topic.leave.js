@@ -4,23 +4,20 @@ const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
 
 module.exports = function(socket, data){
     let request = $DEREF(data);
-    let { topic, type } = (request.data() || {});
+    let { topic } = (request.data() || {});
 
-    if(
-        !_.isString(topic) ||
-        (type != "pubsub" && type != "rpc")
-    ){
+    if( !_.isString(topic) ){
         return socket.emit(
             $ERR("error.topic.invalid"),
             $REF(null, request.uuid()).data()
         );
     }
 
-    let room = type + "." + topic;
-    socket.leave(room);
+    socket.auths.delete(topic);
+    socket.leave(topic);
     socket.emit(
         $E("topic.left"),
-        $REF(room, request.uuid()).data()
+        $REF(topic, request.uuid()).data()
     );
 };
 

@@ -4,6 +4,8 @@ const protohandlers = require("./protohandlers");
 const openpgp = require("openpgp");
 const session_manager = require("./sessions");
 
+const SocketAuthorizationHolder = require("./SocketAuthorizationHolder");
+
 const encryption_for_server =
     require('../middlewares/EncryptableSocket/setup_server');
 
@@ -41,7 +43,12 @@ class SAMRServer extends events.EventEmitter {
         this.https_server.listen(port);
     }
 
+    #customize_socket(socket){
+        socket.auths = new SocketAuthorizationHolder();
+    }
+
     #on_connection(socket){
+        this.#customize_socket(socket);
         console.log("New connection", socket.id);
 
         socket.on("disconnect", ()=>{

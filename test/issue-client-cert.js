@@ -32,11 +32,10 @@ async function run(){
     let cert = await authority
         .bearer_fingerprint(bearer_public_key.getFingerprint())
         .validity_duration(365*86400)
-        .tag("subscribe.topic.r.generic-topic1")
-        .tag("publish.topic.r.generic-topic1")
-        .tag("call.topic.r.generic-topic1")
-        .tag("yield.topic.r.generic-topic1")
-        .tag("publish.topic.r.generic-topic2")
+        .tag("topic.full", ["publish", "call", "yield"])
+        .tag("topic.events-only", ["publish"])
+        .tag("topic.rpc-1", ["call"])
+        .tag("topic.rpc-2", ["yield"])
     .go();
 
     console.log("######### created cert as below");

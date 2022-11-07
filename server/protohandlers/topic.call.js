@@ -14,12 +14,10 @@ module.exports = async function(socket, request_data){
         );
     }
 
-    let room = "rpc." + topic;
-
     // Check socket authorization
     if(!(
-        socket.rooms.has(room) &&
-        socket.usercert.has_tag("call." + topic)
+        socket.rooms.has(topic) &&
+        socket.auths.has(topic, "call")
     )){
         socket.emit(
             $ERR("error.auth.insufficient"),
@@ -30,10 +28,12 @@ module.exports = async function(socket, request_data){
 
     // Find out which socket may handle the call request
 
-    let answerer_tag = "yield." + topic;
     let sockets_in_room = _.filter(
         this.io.in(room).fetchSockets(),
-        (s)=>s.session_id && s.usercert && s.usercert.has_tag("yield." + topic)
+        (s)=>(
+            s.session_id &&
+            s.auths.has_tag(topic, "yield")
+        )
     );
 
     if(sockets_in_room.length < 1){

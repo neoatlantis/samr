@@ -7,7 +7,7 @@ class OpenPGPCertIssuer{
 
     #data_valid_duration = 31 * 86400;
     #data_bearer_fingerprint = "";
-    #data_tags = [];
+    #data_tags = new Map();
 
     constructor(issuer_private_key){
         this.#issuer_private_key = issuer_private_key;
@@ -23,8 +23,8 @@ class OpenPGPCertIssuer{
         return this;
     }
 
-    tag(t){
-        this.#data_tags.push(t);
+    tag(t, attr){
+        this.#data_tags.set(t, attr);
         return this;
     }
 
@@ -49,7 +49,9 @@ class OpenPGPCertIssuer{
             ` end: ${validity_end}`,
             "tags:",
         ];
-        for(let entry of this.#data_tags) cert_request.push(` - ${entry}`);
+        this.#data_tags.forEach((tag_attr, tag_name)=>{
+            cert_request.push(` "${tag_name}": ${JSON.stringify(tag_attr)}`);
+        });
         cert_request = cert_request.join("\n") + "\n";
         let message = await openpgp.createCleartextMessage({
             text: cert_request,
