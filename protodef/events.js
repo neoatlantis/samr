@@ -1,5 +1,7 @@
 module.exports = [
-    'auth',
+    'auth.hello',
+    'auth.challenge',
+    'auth.verify',
     'auth.success',
     'auth.failure',
 

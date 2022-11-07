@@ -14,6 +14,8 @@ class SAMRClient extends events.EventEmitter {
     #joined_rooms;
     #rpc_endpoints;
 
+    #events_bound = false;
+
     socket;
 
     topics; // emitter of incoming topic events
@@ -41,8 +43,7 @@ class SAMRClient extends events.EventEmitter {
             cert, private_key_armored
         });
 
-        this.socket.on("connect", (s)=>this.#on_connection());
-        this.socket.io.on("reconnect", (s)=>this.#on_reconnect());
+        this.#bind_events();
     }
 
     // ---- register/unregister RPC endpoint
@@ -67,11 +68,14 @@ class SAMRClient extends events.EventEmitter {
         })
     }
 
-    // ---- on new connection
+    // ---- bind events
 
-    #on_connection(){
+    #bind_events(){
         const socket = this.socket;
-        console.log("connected");
+        if(this.#events_bound) return;
+
+        socket.on("connect", (s)=>this.#on_connection());
+        socket.io.on("reconnect", (s)=>this.#on_reconnect());
 
         socket.on("error", (err)=>{
             console.error("Socket error received!", err);
@@ -92,6 +96,7 @@ class SAMRClient extends events.EventEmitter {
                 });
             });
         }
+        add_to_resolver("auth.challenge");
         add_to_resolver("topic.joined");
         add_to_resolver("topic.left");
         add_to_resolver("topic.published");
@@ -106,6 +111,14 @@ class SAMRClient extends events.EventEmitter {
             }
         });
 
+        this.#events_bound = true;
+    }
+
+
+    // ---- on new connection
+
+    #on_connection(){
+        console.log("connected");
         this.#do_auth();
     }
 
@@ -116,10 +129,17 @@ class SAMRClient extends events.EventEmitter {
     // ---- authenticator
 
     async #do_auth(){
-        let proof = await this.#authenticator.authenticate(this.socket.id);
+        let hello_request = $REF(null);
+        let hello_promise = this.#new_promise_of_event(
+            "auth.challenge", hello_request.uuid())
+        this.socket.emit("auth.hello", hello_request.data());
+
+        let { challenge } = $DEREF(await hello_promise).data();
+
+        let proof = await this.#authenticator.authenticate(challenge);
         let referenced = $REF(proof);
         console.log("Send auth proof, uuid=" + referenced.uuid());
-        this.socket.emit("auth", referenced.data());
+        this.socket.emit("auth.verify", referenced.data());
     }
 
     #on_auth_success(response){

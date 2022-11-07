@@ -45,7 +45,7 @@ module.exports = async function(socket, orig_data){
     let claim = proof_result.get_claim();
     let cert  = proof_result.get_cert();
 
-    let claim_conn_id = _.get(claim, "conn", "");
+    let claim_challenge = _.get(claim, "challenge", "");
     let claim_session_id = _.get(
         claim,
         "session",
@@ -56,7 +56,7 @@ module.exports = async function(socket, orig_data){
     // user must claim for the current connection explicitly, otherwise it might
     // be a reused proof
 
-    if(claim_conn_id != socket.id){
+    if(claim_challenge != socket._auth_challenge.toString("hex")){
         return reject("User must claim for current socket id.");
     }
 

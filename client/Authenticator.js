@@ -12,9 +12,9 @@ class Authenticator {
         this.#private_key_armored = private_key_armored;
     }
 
-    async authenticate(socket_id){
+    async authenticate(challenge){
         let claim = {
-            conn: socket_id,
+            challenge,
             time: new Date(),
         };
         if(_.isString(this.#session_id)){
