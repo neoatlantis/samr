@@ -6,6 +6,7 @@ class SessionManager {
     #sessions;
     constructor(){
         this.#sessions = new Map();
+        setInterval(()=>this.clean_sessions(), 30000);
     }
 
     clean_sessions(){
