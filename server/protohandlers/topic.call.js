@@ -54,7 +54,7 @@ module.exports = async function(socket, request_data){
 
     // Create new invocation
 
-    let invocation = $REF({ data });
+    let invocation = $REF({ topic, data });
     let invocation_id = invocation.uuid();
     rpc_router_table.add_record({
         uuid: invocation_id,

@@ -12,6 +12,8 @@ class SAMRClient extends events.EventEmitter {
     #authenticator;
     #event_promise_resolver;
     #joined_rooms;
+    #rpc_endpoints;
+
     socket;
 
     topics; // emitter of incoming topic events
@@ -20,6 +22,7 @@ class SAMRClient extends events.EventEmitter {
         super();
         this.topics = new events.EventEmitter();
 
+        this.#rpc_endpoints = new Map();
         this.#joined_rooms = new Set();
         this.#event_promise_resolver = new OnEventPromiseResolver();
 
@@ -40,6 +43,16 @@ class SAMRClient extends events.EventEmitter {
 
         this.socket.on("connect", (s)=>this.#on_connection());
         this.socket.io.on("reconnect", (s)=>this.#on_reconnect());
+    }
+
+    // ---- register/unregister RPC endpoint
+
+    rpc_register(method, handler){
+        this.#rpc_endpoints.set(method, handler);
+    }
+
+    rpc_unregister(method){
+        this.#rpc_endpoints.delete(method);
     }
 
     // ---- Listens for socket.io incoming events, and resolve a previous
@@ -70,6 +83,7 @@ class SAMRClient extends events.EventEmitter {
         socket.on("auth.success", (e)=>this.#on_auth_success(e));
         socket.on("auth.failure", console.error);
         socket.on("topic.event", this.#on_topic_event.bind(this));
+        socket.on("topic.invoke", this.#on_topic_invoke.bind(this));
 
         let add_to_resolver = (event)=>{
             socket.on(event, (referenced_data)=>{
@@ -82,6 +96,7 @@ class SAMRClient extends events.EventEmitter {
         add_to_resolver("topic.left");
         add_to_resolver("topic.published");
         add_to_resolver("topic.called");
+        add_to_resolver("topic.result");
 
         socket.onAny((event_name, ...args)=>{
             if(_.startsWith(event_name, "error.")){
@@ -188,7 +203,26 @@ class SAMRClient extends events.EventEmitter {
         return this.#new_promise_of_event("topic.result", invocation_id);
     }
 
+    // --- handler for RPC remote invocation
 
+    async #on_topic_invoke(request_data){
+        let request = $DEREF(request_data);
+        let { topic, data } = request.data() || {};
+        if(!this.#rpc_endpoints.has(topic)) return;
+
+        try{
+            let result = await this.#rpc_endpoints.get(topic)(data);
+            this.socket.emit(
+                $E("topic.yield"),
+                $REF({ topic, result }, request.uuid()).data()
+            );
+        } catch(e){
+            this.socket.emit(
+                $E("topic.yield"),
+                $REF({ topic, error: e.message }, request.uuid()).data()
+            );
+        }
+    }
 
 }
 

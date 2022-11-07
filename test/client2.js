@@ -25,8 +25,8 @@ client.once("authenticated", async ()=>{
 
     console.log(">> Try call topic.rpc-1");
     try{
-        await client.call("topic.rpc-1", { hello: "world "});
-        console.log(">> Called.");
+        let result = await client.call("topic.rpc-1", { hello: "world "});
+        console.log(">> Called.", result);
     } catch(e){
         console.log(">> Error:", e);
     }

@@ -17,6 +17,11 @@ client.socket.onAny((event, args)=>{
     console.error("| ", event, args);
 })
 
+client.rpc_register("topic.rpc-1", ({hello})=>{
+    return { "fulltext": hello };
+});
+
+
 client.once("authenticated", async ()=>{
 
 

@@ -5,7 +5,7 @@ const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
 
 module.exports = async function(socket, request_data){
     let request = $DEREF(request_data);
-    let { topic, data } = (request.data() || {});
+    let { topic, result, error } = (request.data() || {});
 
     if(!_.isString(topic)){
         return socket.emit(
@@ -17,7 +17,7 @@ module.exports = async function(socket, request_data){
     // Check socket authorization
     if(!(
         socket.rooms.has(topic) &&
-        socket.auths.has_tag(topic, "yield")
+        socket.auths.has(topic, "yield")
     )){
         socket.emit(
             $ERR("error.auth.insufficient"),
@@ -42,7 +42,7 @@ module.exports = async function(socket, request_data){
 
     // sent back data to caller
     let sender_socket = _.find(
-        this.io.in(room).fetchSockets(),
+        await this.io.in(topic).fetchSockets(),
         (s)=>s.session_id && s.session_id == sender
     );
     // TODO if no sender live connection, queue the answer?
@@ -53,7 +53,7 @@ module.exports = async function(socket, request_data){
     // Return information to sender socket.
     sender_socket.emit(
         $E("topic.result"),
-        $REF({ topic, data }, invocation_id).data()
+        $REF({ topic, result, error }, invocation_id).data()
     )
 
     // remove old record
