@@ -29,7 +29,7 @@ module.exports = async function(socket, request_data){
     // Find out which socket may handle the call request
 
     let sockets_in_room = _.filter(
-        this.io.in(room).fetchSockets(),
+        this.io.in(topic).fetchSockets(),
         (s)=>(
             s.session_id &&
             s.auths.has_tag(topic, "yield")
@@ -39,7 +39,10 @@ module.exports = async function(socket, request_data){
     if(sockets_in_room.length < 1){
         return socket.emit(
             $ERR("error.rpc.no-answer"),
-            $REF(null, request.uuid()).data()
+            $REF(
+                "Currently no client found to answer the call on: " + topic,
+                request.uuid()
+            ).data()
         );
     }
 
@@ -66,7 +69,10 @@ module.exports = async function(socket, request_data){
 
     socket.emit(
         $E("topic.called"),
-        $REF(invocation_id, request.uuid()).data()
+        $REF(
+            { invocation: invocation_id },
+            request.uuid()
+        ).data()
     )
 };
 

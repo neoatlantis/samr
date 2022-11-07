@@ -22,16 +22,42 @@ client.socket.onAny((event, args)=>{
     console.error("| ", event, args);
 })
 
-client.once("authenticated", ()=>{
+client.once("authenticated", async ()=>{
 
-    client.subscribe("topic.r.generic-topic1");
+    console.log(">> Try joining topic.full")
+    await client.join("topic.full");
+    console.log(">> Joined topic.full");
 
-    setTimeout(()=>{
-        client.publish("topic.r.generic-topic1", { hello: "world" });
-    }, 1000);
+    console.log(">> Try joining topic.not-authorized")
+    try{
+        await client.join("topic.not-authorized");
+    } catch(e){
+        console.log(">> Error:", e);
+    }
+
+    console.log(">> Try publishing to topic.full");
+    await client.publish("topic.full", { hello: "world" });
+    console.log(">> Published.");
+
+
+    console.log(">> Try publishing to topic.not-authorized");
+    try{
+        await client.publish("topic.not-authorized", { hello: "world" });
+    } catch(e){
+        console.log(">> Error:", e);
+    }
+
+
+    console.log(">> Try call topic.full");
+    try{
+        await client.call("topic.full", { hello: "world "});
+    } catch(e){
+        console.log(">> Error:", e);
+    }
+
 
 });
 
-client.topics.on("topic.r.generic-topic1", (data, uuid)=>{
-    console.log("Incoming topic / topic.r.generic-topic1", uuid, data);
+client.topics.on("topic.full", (data, uuid)=>{
+    console.log("Incoming topic / topic.full", uuid, data);
 })

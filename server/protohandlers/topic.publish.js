@@ -20,7 +20,10 @@ module.exports = async function(socket, request_data){
     )){
         socket.emit(
             $ERR("error.auth.insufficient"),
-            $REF(null, request.uuid()).data()
+            $REF(
+                "User cert does not authorize publishing to topic: " + topic,
+                request.uuid()
+            ).data()
         );
         return;
     }

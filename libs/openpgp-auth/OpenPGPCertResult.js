@@ -30,7 +30,7 @@ class OpenPGPCertResult {
 
     has_tag(t, attr){
         if(_.isNil(attr)){
-            return this.#tags.has(this.#normalize_tag(t));
+            return this.#tags.has(t);
         } else {
             return _.includes(this.#tags.get(t), attr);
         }

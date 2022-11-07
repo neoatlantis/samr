@@ -14,12 +14,10 @@ module.exports = async function(socket, request_data){
         );
     }
 
-    let room = "rpc." + topic;
-
     // Check socket authorization
     if(!(
-        socket.rooms.has(room) &&
-        socket.usercert.has_tag("yield." + topic)
+        socket.rooms.has(topic) &&
+        socket.auths.has_tag(topic, "yield")
     )){
         socket.emit(
             $ERR("error.auth.insufficient"),
@@ -45,7 +43,7 @@ module.exports = async function(socket, request_data){
     // sent back data to caller
     let sender_socket = _.find(
         this.io.in(room).fetchSockets(),
-        (s)=>s.session_id && s.session_id == sender.session_id
+        (s)=>s.session_id && s.session_id == sender
     );
     // TODO if no sender live connection, queue the answer?
     if(!sender_socket){

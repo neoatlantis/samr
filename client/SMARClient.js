@@ -2,6 +2,7 @@ const _ = require("lodash");
 const { io } = require("socket.io-client");
 const events = require("events");
 const Authenticator = require("./Authenticator");
+const OnEventPromiseResolver = require("./OnEventPromiseResolver");
 const { $E, $ERR, $REF, $DEREF } = require("../protodef");
 
 
@@ -9,6 +10,7 @@ const { $E, $ERR, $REF, $DEREF } = require("../protodef");
 class SAMRClient extends events.EventEmitter {
 
     #authenticator;
+    #event_promise_resolver;
     socket;
 
     topics; // emitter of incoming topic events
@@ -16,6 +18,7 @@ class SAMRClient extends events.EventEmitter {
     constructor(args){
         super();
         this.topics = new events.EventEmitter();
+        this.#event_promise_resolver = new OnEventPromiseResolver();
 
         this.#init(args);
     }
@@ -36,6 +39,19 @@ class SAMRClient extends events.EventEmitter {
         this.socket.io.on("reconnect", (s)=>this.#on_reconnect());
     }
 
+    // ---- Listens for socket.io incoming events, and resolve a previous
+    //      Promise with matching uuid.
+
+    #new_promise_of_event(event, uuid){
+        return new Promise((resolve, reject)=>{
+            // add this new Promise to resolver
+            this.#event_promise_resolver.set({
+                event, uuid, resolve, reject, timeout: 30,
+            });
+        })
+    }
+
+    // ---- on new connection
 
     #on_connection(){
         const socket = this.socket;
@@ -51,6 +67,26 @@ class SAMRClient extends events.EventEmitter {
         socket.on("auth.success", (e)=>this.#on_auth_success(e));
         socket.on("auth.failure", console.error);
         socket.on("topic.event", this.#on_topic_event.bind(this));
+
+        let add_to_resolver = (event)=>{
+            socket.on(event, (referenced_data)=>{
+                this.#event_promise_resolver.handle({
+                    event, referenced_data
+                });
+            });
+        }
+        add_to_resolver("topic.joined");
+        add_to_resolver("topic.left");
+        add_to_resolver("topic.published");
+        add_to_resolver("topic.called");
+
+        socket.onAny((event_name, ...args)=>{
+            if(_.startsWith(event_name, "error.")){
+                this.#event_promise_resolver.handle_error({
+                    referenced_data: args[0],
+                });
+            }
+        });
 
         this.#do_auth();
     }
@@ -80,22 +116,34 @@ class SAMRClient extends events.EventEmitter {
         setTimeout(()=>this.#do_auth(), 5000);
     }
 
-    // ---- subscribe/unsubscribe to topic
+    // ---- join/leave a topic
 
-    async subscribe(topic){
-        let referenced = $REF(topic);
+    join(topic){
+        let referenced = $REF({ topic });
         let uuid = referenced.uuid();
-        this.socket.emit($E("topic.subscribe"), referenced.data());
-        // TODO make this a promise using given uuid
+
+        let ret = this.#new_promise_of_event("topic.joined", uuid);
+        this.socket.emit($E("topic.join"), referenced.data());
+        return ret;
+    }
+
+    leave(topic){
+        let referenced = $REF({ topic });
+        let uuid = referenced.uuid();
+
+        let ret = this.#new_promise_of_event("topic.left", uuid);
+        this.socket.emit($E("topic.leave"), referenced.data());
+        return ret;
     }
 
     // ---- publish to topic
 
-    async publish(topic, data){
-        let referenced = $REF({
-            topic, data
-        });
+    publish(topic, data){
+        let referenced = $REF({ topic, data });
+        let ret = this.#new_promise_of_event(
+            "topic.published", referenced.uuid());
         this.socket.emit($E("topic.publish"), referenced.data());
+        return ret;
     }
 
     // ---- handler for incoming event
@@ -106,6 +154,17 @@ class SAMRClient extends events.EventEmitter {
 
         this.topics.emit(topic, data, request.uuid());
     }
+
+    // ---- RPC call
+
+    call(topic, data){
+        let referenced = $REF({ topic, data });
+        let ret = this.#new_promise_of_event(
+            "topic.call", referenced.uuid());
+        this.socket.emit($E("topic.call"), referenced.data());
+        return ret;
+    }
+
 
 
 }

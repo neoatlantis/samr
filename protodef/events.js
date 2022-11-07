@@ -3,14 +3,18 @@ module.exports = [
     'auth.success',
     'auth.failure',
 
-    'topic.subscribe',
-    'topic.subscribed',
-    'topic.unsubscribed',
+    'topic.join',
+    'topic.joined',
+    'topic.leave',
+    'topic.left',
 
     'topic.publish',
     'topic.published',
     'topic.event',
 
+    'topic.call',
+    'topic.called',
     'topic.invoke',
-    
+    'topic.yield',
+
 ];

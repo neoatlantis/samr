@@ -16,14 +16,27 @@ module.exports = async function(socket, request_data){
     if(!socket.usercert.has_tag(topic)){
         return socket.emit(
             $ERR("error.auth.insufficient"),
-            $REF(null, request.uuid()).data()
+            $REF(
+                "User cert does not authorize joining topic: " + topic,
+                request.uuid()
+            ).data()
         );
     }
 
+    let attrs = socket.usercert.get_tag_attrs(topic);
+
     socket.join(topic);
-    socket.auths.set(topic, socket.usercert.get_tag_attrs(topic));
+    socket.auths.set(topic, attrs);
 
     socket.emit($E("topic.joined"), $REF(topic, request.uuid()).data());
+
+    console.log([
+        socket.session_id,
+        "join",
+        topic,
+        "auth-attrs",
+        attrs.join(","),
+    ].join("\t"));
 };
 
 module.exports.require_session = true;
