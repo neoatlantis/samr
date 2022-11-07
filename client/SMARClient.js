@@ -11,6 +11,7 @@ class SAMRClient extends events.EventEmitter {
 
     #authenticator;
     #event_promise_resolver;
+    #joined_rooms;
     socket;
 
     topics; // emitter of incoming topic events
@@ -18,6 +19,8 @@ class SAMRClient extends events.EventEmitter {
     constructor(args){
         super();
         this.topics = new events.EventEmitter();
+
+        this.#joined_rooms = new Set();
         this.#event_promise_resolver = new OnEventPromiseResolver();
 
         this.#init(args);
@@ -109,6 +112,10 @@ class SAMRClient extends events.EventEmitter {
         console.log("Authenticatd to session:", session_id);
         this.#authenticator.set_session_id(session_id);
         this.emit("authenticated");
+
+        this.#joined_rooms.forEach((topic)=>{
+            this.join(topic);
+        });
     }
 
     #on_auth_failure({ reason }){
@@ -124,7 +131,9 @@ class SAMRClient extends events.EventEmitter {
 
         let ret = this.#new_promise_of_event("topic.joined", uuid);
         this.socket.emit($E("topic.join"), referenced.data());
-        return ret;
+        return ret.then(()=>{
+            this.#joined_rooms.add(topic);
+        });
     }
 
     leave(topic){
@@ -133,7 +142,9 @@ class SAMRClient extends events.EventEmitter {
 
         let ret = this.#new_promise_of_event("topic.left", uuid);
         this.socket.emit($E("topic.leave"), referenced.data());
-        return ret;
+        return ret.then(()=>{
+            this.#joined_rooms.delete(topic);
+        });
     }
 
     // ---- publish to topic
@@ -157,12 +168,24 @@ class SAMRClient extends events.EventEmitter {
 
     // ---- RPC call
 
-    call(topic, data){
+    async call(topic, data){
         let referenced = $REF({ topic, data });
-        let ret = this.#new_promise_of_event(
-            "topic.call", referenced.uuid());
+        let called_promise = this.#new_promise_of_event(
+            "topic.called", referenced.uuid());
         this.socket.emit($E("topic.call"), referenced.data());
-        return ret;
+
+        let invocation_id = null;
+        try{
+            let called_result = await called_promise;
+            invocation_id = _.get(
+                $DEREF(called_result).data(),
+                "invocation"
+            );
+        } catch(e){
+            throw e;
+        }
+
+        return this.#new_promise_of_event("topic.result", invocation_id);
     }
 
 

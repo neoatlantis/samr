@@ -29,10 +29,10 @@ module.exports = async function(socket, request_data){
     // Find out which socket may handle the call request
 
     let sockets_in_room = _.filter(
-        this.io.in(topic).fetchSockets(),
+        await this.io.in(topic).fetchSockets(),
         (s)=>(
             s.session_id &&
-            s.auths.has_tag(topic, "yield")
+            s.auths.has(topic, "yield")
         )
     );
 
@@ -62,10 +62,7 @@ module.exports = async function(socket, request_data){
         receiver: choosen_socket.session_id,
     });
 
-    choosen_socket.emit(
-        $E("topic.invoke"),
-        new_event.data()
-    );
+    choosen_socket.emit( $E("topic.invoke"), invocation.data() );
 
     socket.emit(
         $E("topic.called"),
@@ -73,7 +70,7 @@ module.exports = async function(socket, request_data){
             { invocation: invocation_id },
             request.uuid()
         ).data()
-    )
+    );
 };
 
 module.exports.require_session = true;

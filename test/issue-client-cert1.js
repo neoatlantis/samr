@@ -29,20 +29,20 @@ async function run(){
         .toPublic();
     let bearer_public_key_armored = bearer_public_key.armor();
 
-    let cert = await authority
+    let cert1 = await authority
         .bearer_fingerprint(bearer_public_key.getFingerprint())
         .validity_duration(365*86400)
-        .tag("topic.full", ["publish", "call", "yield"])
         .tag("topic.events-only", ["publish"])
-        .tag("topic.rpc-1", ["call"])
-        .tag("topic.rpc-2", ["yield"])
+        .tag("topic.rpc-1", ["yield"])
+        .tag("topic.rpc-2", ["call"])
     .go();
 
-    console.log("######### created cert as below");
-    console.log(cert);
+    console.log("######### created cert 1 as below");
+    console.log(cert1);
     console.log("\n######### done ");
 
 
+    /*
     let made_proof = await make_proof({
         claim: "test claim",
         cert: cert,
@@ -54,7 +54,7 @@ async function run(){
         authority_public_key_armored
      );
 
-    console.log(verified_proof.json());
+    console.log(verified_proof.json());*/
 
 
 

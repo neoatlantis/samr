@@ -33,4 +33,4 @@ class RPCRouterTable {
 
 }
 
-return new RPCRouterTable();
+module.exports = new RPCRouterTable();
