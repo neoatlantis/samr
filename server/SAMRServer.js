@@ -28,11 +28,17 @@ class SAMRServer extends events.EventEmitter {
         authority_public_keys,
         port=2222
     }){
-        this.https_server = require("https").createServer({
-            cert: ssl_cert,
-            key: ssl_private_key,
-        });
-        this.io = require("socket.io")(this.https_server);
+        if(ssl_cert || ssl_private_key){
+            this.https_server = require("https").createServer({
+                cert: ssl_cert,
+                key: ssl_private_key,
+            });
+            this.io = require("socket.io")(this.https_server);
+        } else {
+            this.http_server = require("http").createServer();
+            this.io = require("socket.io")(this.http_server);
+        }
+
 
         this.authority_public_keys = await openpgp.readKeys({
             armoredKeys: authority_public_keys,
@@ -40,7 +46,8 @@ class SAMRServer extends events.EventEmitter {
 
         this.io.on("connection", (s)=>this.#on_connection(s));
 
-        this.https_server.listen(port);
+        (this.http_server || this.https_server).listen(port);
+        console.log("Server listening on localhost:" + port);
     }
 
     #customize_socket(socket){

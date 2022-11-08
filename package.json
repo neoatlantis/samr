@@ -9,7 +9,6 @@
   "author": "NeoAtlantis",
   "license": "GPL-2.0",
   "dependencies": {
-    "cryptr": "^6.0.3",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "msgpack-lite": "^0.1.26",
