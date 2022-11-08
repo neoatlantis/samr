@@ -1,3 +1,5 @@
+const { info, error, log, $socket } = require("../../libs/logging");
+
 const _ = require("lodash");
 const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
 const uri = require("../../libs/uri");
@@ -31,13 +33,7 @@ module.exports = async function(socket, request_data){
 
     socket.emit($E("topic.joined"), $REF(topic, request.uuid()).data());
 
-    console.log([
-        socket.session_id,
-        "join",
-        topic,
-        "auth-attrs",
-        attrs.join(","),
-    ].join("\t"));
+    log(`${$socket(socket)} joined topic: ${topic}, with attributes: ${attrs.join(",")}`);
 };
 
 module.exports.require_session = true;

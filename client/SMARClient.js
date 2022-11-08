@@ -50,10 +50,12 @@ class SAMRClient extends events.EventEmitter {
 
     rpc_register(method, handler){
         this.#rpc_endpoints.set(method, handler);
+        return this.join(method);
     }
 
     rpc_unregister(method){
         this.#rpc_endpoints.delete(method);
+        return this.leave(method);
     }
 
     // ---- Listens for socket.io incoming events, and resolve a previous
@@ -138,7 +140,6 @@ class SAMRClient extends events.EventEmitter {
 
         let proof = await this.#authenticator.authenticate(challenge);
         let referenced = $REF(proof);
-        console.log("Send auth proof, uuid=" + referenced.uuid());
         this.socket.emit("auth.verify", referenced.data());
     }
 

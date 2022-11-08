@@ -63,7 +63,7 @@ class OnEventPromiseResolver {
         this.#hooks.forEach(({ reject, timeout }, uuid)=>{
             if(timeout < now){
                 if(_.isFunction(reject)){
-                    reject("Timed out.");
+                    reject(`Call <${uuid}> timed out.`);
                 }
                 deleting.push(uuid);
             }

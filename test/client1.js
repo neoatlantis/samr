@@ -17,17 +17,23 @@ client.socket.onAny((event, args)=>{
     console.error("| ", event, args);
 })
 
-client.rpc_register("topic.rpc-1", ({hello})=>{
-    return { "fulltext": hello };
-});
 
 
 client.once("authenticated", async ()=>{
 
+    await client.rpc_register("topic.rpc-1", ({hello})=>{
+        return { "fulltext": hello };
+    });
 
     await client.join("topic.rpc-1.subtopic1");
     await client.join("topic.rpc-2.subtopic2");
     await client.join("topic.events-only");
+
+    setInterval(()=>{
+        client.publish("topic.events-only", {
+            "current-time": new Date().toISOString(),
+        });
+    }, 1000);
 
 });
 

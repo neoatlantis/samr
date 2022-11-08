@@ -9,6 +9,7 @@
   "author": "NeoAtlantis",
   "license": "GPL-2.0",
   "dependencies": {
+    "fancy-log": "^2.0.0",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "msgpack-lite": "^0.1.26",

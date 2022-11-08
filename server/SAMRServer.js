@@ -3,6 +3,7 @@ const events = require("events");
 const protohandlers = require("./protohandlers");
 const openpgp = require("openpgp");
 const session_manager = require("./sessions");
+const { info, error, $socket } = require("../libs/logging");
 
 const SocketAuthorizationHolder = require("./SocketAuthorizationHolder");
 
@@ -55,15 +56,16 @@ class SAMRServer extends events.EventEmitter {
     }
 
     #on_connection(socket){
+        info(`New connection: ${$socket(socket)}`);
+
         this.#customize_socket(socket);
-        console.log("New connection", socket.id);
 
         socket.on("disconnect", ()=>{
-            console.log("remove all isteners");
+            info(`${$socket(socket)} disconnected. Removing all listeners.`);
             socket.removeAllListeners();
         });
         socket.on("error", (err)=>{
-            console.error("Socket error received!", err);
+            error(`${$socket(socket)}: error received! ${err}`);
             if(err && _.startsWith(err.message, "fatal.")){
                 socket.disconnect();
             }
