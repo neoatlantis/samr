@@ -25,8 +25,8 @@ client.rpc_register("topic.rpc-1", ({hello})=>{
 client.once("authenticated", async ()=>{
 
 
-    await client.join("topic.rpc-1");
-    await client.join("topic.rpc-2");
+    await client.join("topic.rpc-1.subtopic1");
+    await client.join("topic.rpc-2.subtopic2");
     await client.join("topic.events-only");
 
 });

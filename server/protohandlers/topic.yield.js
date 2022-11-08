@@ -1,13 +1,14 @@
 const _ = require("lodash");
 const rpc_router_table = require("../rpc_router_table");
 const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
+const uri = require("../../libs/uri");
 
 
 module.exports = async function(socket, request_data){
     let request = $DEREF(request_data);
     let { topic, result, error } = (request.data() || {});
 
-    if(!_.isString(topic)){
+    if(!uri.is_valid_uri(topic)){
         return socket.emit(
             $ERR("error.topic.invalid"),
             $REF(null, request.uuid()).data()

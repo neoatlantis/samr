@@ -1,12 +1,13 @@
 const _ = require("lodash");
 const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
+const uri = require("../../libs/uri");
 
 
 module.exports = function(socket, data){
     let request = $DEREF(data);
     let { topic } = (request.data() || {});
 
-    if( !_.isString(topic) ){
+    if(!uri.is_valid_uri(topic)){
         return socket.emit(
             $ERR("error.topic.invalid"),
             $REF(null, request.uuid()).data()

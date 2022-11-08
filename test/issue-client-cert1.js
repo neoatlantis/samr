@@ -33,8 +33,8 @@ async function run(){
         .bearer_fingerprint(bearer_public_key.getFingerprint())
         .validity_duration(365*86400)
         .tag("topic.events-only", ["publish"])
-        .tag("topic.rpc-1", ["yield"])
-        .tag("topic.rpc-2", ["call"])
+        .tag("topic.rpc-1.**", ["yield"])
+        .tag("topic.rpc-2.**", ["call"])
     .go();
 
     console.log("######### created cert 1 as below");

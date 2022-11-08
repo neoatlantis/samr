@@ -1,5 +1,6 @@
 const openpgp = require("openpgp");
 const crypto = require("crypto");
+const uri = require("../uri");
 
 class OpenPGPCertIssuer{
 
@@ -24,7 +25,10 @@ class OpenPGPCertIssuer{
     }
 
     tag(t, attr){
-        this.#data_tags.set(t, attr);
+        if(!uri.is_valid_pattern(t)){
+            throw Error(`Tag <${t}> is not a valid URI pattern.`);
+        }
+        this.#data_tags.set(uri.normalize(t), attr);
         return this;
     }
 

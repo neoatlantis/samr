@@ -2,6 +2,7 @@ const openpgp = require("openpgp");
 const crypto = require("crypto");
 const _ = require("lodash");
 const yaml = require("js-yaml");
+const uri = require("../uri");
 const OpenPGPCertResult = require("./OpenPGPCertResult");
 
 
@@ -61,6 +62,7 @@ class OpenPGPCertReader{
 
         for(let tag_name in obj.tags){
             if(
+                !uri.is_valid_pattern(tag_name) ||
                 !_.isArray(obj.tags[tag_name]) ||
                 !obj.tags[tag_name].every(_.isString)
             ){
