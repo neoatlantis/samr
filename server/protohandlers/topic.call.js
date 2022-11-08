@@ -32,8 +32,9 @@ module.exports = async function(socket, request_data){
     let sockets_in_room = _.filter(
         await this.io.in(topic).fetchSockets(),
         (s)=>(
-            s.session_id &&
-            s.auths.has(topic, "yield")
+            s.session_id &&                      // must be authenticated
+            s.session_id != socket.session_id && // not ourselves
+            s.auths.has(topic, "yield")          // can yield things
         )
     );
 
