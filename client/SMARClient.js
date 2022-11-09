@@ -39,11 +39,12 @@ class SAMRClient extends events.EventEmitter {
     }){
         this.socket = io(url, socket_io_options);
 
-        this.#authenticator = new Authenticator({
+        this.#authenticator = new Authenticator(this, {
             cert, private_key_armored
         });
 
         this.#bind_events();
+        this.#authenticator.start();
     }
 
     // ---- register/unregister RPC endpoint
@@ -61,7 +62,7 @@ class SAMRClient extends events.EventEmitter {
     // ---- Listens for socket.io incoming events, and resolve a previous
     //      Promise with matching uuid.
 
-    #new_promise_of_event(event, uuid){
+    new_promise_of_event(event, uuid){
         return new Promise((resolve, reject)=>{
             // add this new Promise to resolver
             this.#event_promise_resolver.set({
@@ -121,53 +122,11 @@ class SAMRClient extends events.EventEmitter {
 
     #on_connection(){
         console.log("connected");
-        this.start_auth();
+        this.#authenticator.start();
     }
 
     #on_reconnect(){
-        this.start_auth();
-    }
-
-    // ---- authenticator
-
-    async start_auth(){
-        let hello_request = $REF(null);
-        let hello_promise = this.#new_promise_of_event(
-            "auth.challenge", hello_request.uuid());
-        this.socket.emit("auth.hello", hello_request.data());
-
-        let { challenge } = $DEREF(await hello_promise).data();
-
-        let proof = await this.#authenticator.authenticate(challenge);
-        let verify_request = $REF(proof);
-        let verify_promise = this.#new_promise_of_event(
-            "auth.success", verify_request.uuid());
-        this.socket.emit("auth.verify", verify_request.data());
-
-        try{
-            let verify_result = await verify_promise;
-            this.#on_auth_success(verify_result);
-        } catch(e){
-            // auth failure, e.message containing description
-            this.#on_auth_failure();
-        }
-    }
-
-    #on_auth_success(response){
-        let { session_id } = $DEREF(response).data();
-        console.log("Authenticatd to session:", session_id);
-        this.#authenticator.set_session_id(session_id);
-        this.emit("authenticated");
-
-        this.#joined_rooms.forEach((topic)=>{
-            this.join(topic);
-        });
-    }
-
-    #on_auth_failure(response){
-        let { reason } = $DEREF(response).data() || {};
-        this.#authenticator.remove_session_id();
-        setTimeout(()=>this.start_auth(), 5000);
+        this.#authenticator.start();
     }
 
     // ---- join/leave a topic
@@ -176,7 +135,7 @@ class SAMRClient extends events.EventEmitter {
         let referenced = $REF({ topic });
         let uuid = referenced.uuid();
 
-        let ret = this.#new_promise_of_event("topic.joined", uuid);
+        let ret = this.new_promise_of_event("topic.joined", uuid);
         this.socket.emit($E("topic.join"), referenced.data());
         return ret.then(()=>{
             this.#joined_rooms.add(topic);
@@ -187,7 +146,7 @@ class SAMRClient extends events.EventEmitter {
         let referenced = $REF({ topic });
         let uuid = referenced.uuid();
 
-        let ret = this.#new_promise_of_event("topic.left", uuid);
+        let ret = this.new_promise_of_event("topic.left", uuid);
         this.socket.emit($E("topic.leave"), referenced.data());
         return ret.then(()=>{
             this.#joined_rooms.delete(topic);
@@ -198,7 +157,7 @@ class SAMRClient extends events.EventEmitter {
 
     publish(topic, data){
         let referenced = $REF({ topic, data });
-        let ret = this.#new_promise_of_event(
+        let ret = this.new_promise_of_event(
             "topic.published", referenced.uuid());
         this.socket.emit($E("topic.publish"), referenced.data());
         return ret;
@@ -217,7 +176,7 @@ class SAMRClient extends events.EventEmitter {
 
     async call(topic, data){
         let referenced = $REF({ topic, data });
-        let called_promise = this.#new_promise_of_event(
+        let called_promise = this.new_promise_of_event(
             "topic.called", referenced.uuid());
         this.socket.emit($E("topic.call"), referenced.data());
 
@@ -232,7 +191,7 @@ class SAMRClient extends events.EventEmitter {
             throw e;
         }
 
-        return this.#new_promise_of_event("topic.result", invocation_id);
+        return this.new_promise_of_event("topic.result", invocation_id);
     }
 
     // --- handler for RPC remote invocation
