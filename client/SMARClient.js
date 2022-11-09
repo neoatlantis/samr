@@ -6,13 +6,21 @@ const OnEventPromiseResolver = require("./OnEventPromiseResolver");
 const { $E, $ERR, $REF, $DEREF } = require("../protodef");
 
 
+// bind funcs listed in a key-value object, to given instance
+function load_module(instance, functree){
+    for(let func_name in functree){
+        let func = functree[func_name];
+        instance[func_name] = func.bind(instance);
+    }
+}
+
 
 class SAMRClient extends events.EventEmitter {
 
     #authenticator;
     #event_promise_resolver;
-    #joined_rooms;
-    #rpc_endpoints;
+    joined_rooms;
+    rpc_endpoints;
 
     #events_bound = false;
 
@@ -24,9 +32,13 @@ class SAMRClient extends events.EventEmitter {
         super();
         this.topics = new events.EventEmitter();
 
-        this.#rpc_endpoints = new Map();
-        this.#joined_rooms = new Set();
+        this.rpc_endpoints = new Map();
+        this.joined_rooms = new Set();
         this.#event_promise_resolver = new OnEventPromiseResolver();
+
+        load_module(this, require("./clientfuncs/join_and_leave"));
+        load_module(this, require("./clientfuncs/rpc"));
+        load_module(this, require("./clientfuncs/pubsub"));
 
         this.#init(args);
     }
@@ -45,18 +57,6 @@ class SAMRClient extends events.EventEmitter {
 
         this.#bind_events();
         this.#authenticator.start();
-    }
-
-    // ---- register/unregister RPC endpoint
-
-    rpc_register(method, handler){
-        this.#rpc_endpoints.set(method, handler);
-        return this.join(method);
-    }
-
-    rpc_unregister(method){
-        this.#rpc_endpoints.delete(method);
-        return this.leave(method);
     }
 
     // ---- Listens for socket.io incoming events, and resolve a previous
@@ -87,8 +87,8 @@ class SAMRClient extends events.EventEmitter {
             }
         });
 
-        socket.on("topic.event", this.#on_topic_event.bind(this));
-        socket.on("topic.invoke", this.#on_topic_invoke.bind(this));
+        socket.on("topic.event", this._on_topic_event.bind(this));
+        socket.on("topic.invoke", this._on_topic_invoke.bind(this));
 
         let add_to_resolver = (event)=>{
             socket.on(event, (referenced_data)=>{
@@ -129,91 +129,8 @@ class SAMRClient extends events.EventEmitter {
         this.#authenticator.start();
     }
 
-    // ---- join/leave a topic
 
-    join(topic){
-        let referenced = $REF({ topic });
-        let uuid = referenced.uuid();
 
-        let ret = this.new_promise_of_event("topic.joined", uuid);
-        this.socket.emit($E("topic.join"), referenced.data());
-        return ret.then(()=>{
-            this.#joined_rooms.add(topic);
-        });
-    }
-
-    leave(topic){
-        let referenced = $REF({ topic });
-        let uuid = referenced.uuid();
-
-        let ret = this.new_promise_of_event("topic.left", uuid);
-        this.socket.emit($E("topic.leave"), referenced.data());
-        return ret.then(()=>{
-            this.#joined_rooms.delete(topic);
-        });
-    }
-
-    // ---- publish to topic
-
-    publish(topic, data){
-        let referenced = $REF({ topic, data });
-        let ret = this.new_promise_of_event(
-            "topic.published", referenced.uuid());
-        this.socket.emit($E("topic.publish"), referenced.data());
-        return ret;
-    }
-
-    // ---- handler for incoming event
-
-    async #on_topic_event(request_data){
-        let request = $DEREF(request_data);
-        let { topic, data } = (request.data() || {});
-
-        this.topics.emit(topic, data, request.uuid());
-    }
-
-    // ---- RPC call
-
-    async call(topic, data){
-        let referenced = $REF({ topic, data });
-        let called_promise = this.new_promise_of_event(
-            "topic.called", referenced.uuid());
-        this.socket.emit($E("topic.call"), referenced.data());
-
-        let invocation_id = null;
-        try{
-            let called_result = await called_promise;
-            invocation_id = _.get(
-                $DEREF(called_result).data(),
-                "invocation"
-            );
-        } catch(e){
-            throw e;
-        }
-
-        return this.new_promise_of_event("topic.result", invocation_id);
-    }
-
-    // --- handler for RPC remote invocation
-
-    async #on_topic_invoke(request_data){
-        let request = $DEREF(request_data);
-        let { topic, data } = request.data() || {};
-        if(!this.#rpc_endpoints.has(topic)) return;
-
-        try{
-            let result = await this.#rpc_endpoints.get(topic)(data);
-            this.socket.emit(
-                $E("topic.yield"),
-                $REF({ topic, result }, request.uuid()).data()
-            );
-        } catch(e){
-            this.socket.emit(
-                $E("topic.yield"),
-                $REF({ topic, error: e.message }, request.uuid()).data()
-            );
-        }
-    }
 
 }
 
