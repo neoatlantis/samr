@@ -18,22 +18,26 @@ client.socket.onAny((event, args)=>{
 })
 
 
+let inited = false;
+client.on("auth.status.changed", async (auth_status)=>{
 
-client.once("authenticated", async ()=>{
+    if(inited) return;
+    if(!client.authenticator.authenticated) return;
 
     await client.rpc_register("topic.rpc-1", ({hello})=>{
         return { "fulltext": hello };
     });
 
-    await client.join("topic.rpc-1.subtopic1");
     await client.join("topic.rpc-2.subtopic2");
     await client.join("topic.events-only");
 
-    setInterval(()=>{
+    /*setInterval(()=>{
         client.publish("topic.events-only", {
             "current-time": new Date().toISOString(),
         });
-    }, 1000);
+    }, 1000);*/
+
+    inited = true;
 
 });
 

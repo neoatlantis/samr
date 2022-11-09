@@ -20,7 +20,7 @@ class OnEventPromiseResolver {
         });
     }
 
-    handle_error({ referenced_data }){
+    handle_error({ event, referenced_data }){
         /* When an error is emitted using event "error.*.*", the promise
            matching given UUID is rejected regardless of their expected event
            name.
@@ -37,7 +37,11 @@ class OnEventPromiseResolver {
         if(_.isNil(record)) return;
 
         if(_.isFunction(record.reject)){
-            record.reject(data);
+            // Throw an Error with message set to data (reason), and name to
+            // error event URI (e.g. error.auth.insufficient)
+            let constructed_error = new Error(data);
+            constructed_error.name = event;
+            record.reject(constructed_error);
         }
         this.#hooks.delete(uuid);
     }

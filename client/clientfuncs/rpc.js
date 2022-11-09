@@ -2,6 +2,10 @@ const _ = require("lodash");
 const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
 
 
+module.exports.__init__ = function(){
+    this.rpc_endpoints = new Map();
+};
+
 
 module.exports.rpc_register = function(method, handler){
     this.rpc_endpoints.set(method, handler);

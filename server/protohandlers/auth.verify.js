@@ -57,7 +57,7 @@ module.exports = async function(socket, orig_data){
     // be a reused proof
 
     if(claim_challenge != socket._auth_challenge.toString("hex")){
-        return reject("User must claim for current socket id.");
+        return reject("User must claim for current challenge string.");
     }
 
     // time stamp must be valid

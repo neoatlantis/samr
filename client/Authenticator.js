@@ -63,8 +63,11 @@ class Authenticator extends events.EventEmitter {
         return Buffer.from(made_proof).toString("base64");
     }
 
-    async start(){
+    async start(restart){
         this.#started = true;
+        if(restart){
+            this.#last_auth = 0;
+        }
     }
 
     async auth(){
@@ -95,24 +98,36 @@ class Authenticator extends events.EventEmitter {
             this.#on_auth_success(verify_result);
         } catch(e){
             // auth failure, e.message containing description
-            this.#on_auth_failure(e.message);
+            this.#on_auth_failure(e.reason);
         }
     }
 
     #on_auth_success(response){
         let { session_id } = $DEREF(response).data();
         info(`${$socket(this.client.socket)} Authenticatd.`);
+
+        let session_changed = (this.#cached_session_id != session_id);
+
         this.#cached_session_id = session_id;
+
         this.#last_auth = new Date().getTime();
         this.authenticated = true;
-        this.emit("auth.status.changed");
+
+        this.emit("auth.status.changed", {
+            session_changed,
+            authenticated: true,
+        });
     }
 
     #on_auth_failure(reason){
         this.#cached_session_id = null;
         this.authenticated = false;
         this.#last_auth = 0;
-        this.emit("auth.status.changed");
+        error("Authentication failed, reason=" + reason);
+        this.emit("auth.status.changed", {
+            session_changed: false,
+            authenticated: false,
+        });
     }
 }
 

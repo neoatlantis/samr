@@ -9,8 +9,11 @@ const { $E, $ERR, $REF, $DEREF } = require("../protodef");
 
 // bind funcs listed in a key-value object, to given instance
 function load_module(instance, functree){
+    if(functree.__init__) functree.__init__.call(instance);
+
     for(let func_name in functree){
         let func = functree[func_name];
+        if(func_name == "__init__") continue;
         instance[func_name] = func.bind(instance);
     }
 }
@@ -20,41 +23,28 @@ class SAMRClient extends events.EventEmitter {
 
     authenticator;
     #event_promise_resolver;
-    joined_rooms;
-    rpc_endpoints;
-
-    #events_bound = false;
 
     socket;
 
-    topics; // emitter of incoming topic events
-
-    constructor(args){
-        super();
-        this.topics = new events.EventEmitter();
-
-        this.rpc_endpoints = new Map();
-        this.joined_rooms = new Set();
-        this.#event_promise_resolver = new OnEventPromiseResolver();
-
-        load_module(this, require("./clientfuncs/join_and_leave"));
-        load_module(this, require("./clientfuncs/rpc"));
-        load_module(this, require("./clientfuncs/pubsub"));
-
-        this.#init(args);
-    }
-
-    async #init({
+    constructor({
         url,
         socket_io_options={ reconnection: true },
         cert,
         private_key_armored
     }){
-        this.socket = io(url, socket_io_options);
+        super();
+
+        this.#event_promise_resolver = new OnEventPromiseResolver();
 
         this.authenticator = new Authenticator(this, {
             cert, private_key_armored
         });
+
+        load_module(this, require("./clientfuncs/join_and_leave"));
+        load_module(this, require("./clientfuncs/rpc"));
+        load_module(this, require("./clientfuncs/pubsub"));
+
+        this.socket = io(url, socket_io_options);
 
         this.#bind_events();
         this.authenticator.start();
@@ -76,7 +66,6 @@ class SAMRClient extends events.EventEmitter {
 
     #bind_events(){
         const socket = this.socket;
-        if(this.#events_bound) return;
 
         socket.on("connect", (s)=>this.#on_connection());
         socket.io.on("reconnect", (s)=>this.#on_reconnect());
@@ -110,12 +99,17 @@ class SAMRClient extends events.EventEmitter {
         socket.onAny((event_name, ...args)=>{
             if(_.startsWith(event_name, "error.")){
                 this.#event_promise_resolver.handle_error({
+                    event: event_name,
                     referenced_data: args[0],
                 });
             }
         });
 
-        this.#events_bound = true;
+        // authenticator events passing
+        this.authenticator.on("auth.status.changed", (e)=>{
+            this.emit("auth.status.changed", e);
+        });
+
     }
 
 
@@ -127,7 +121,8 @@ class SAMRClient extends events.EventEmitter {
     }
 
     #on_reconnect(){
-        this.authenticator.start();
+        log(`Reconnected as socket ${$socket(this.socket)}`);
+        this.authenticator.start(true);
     }
 
 }
