@@ -86,8 +86,6 @@ class SAMRClient extends events.EventEmitter {
             }
         });
 
-        socket.on("auth.success", (e)=>this.#on_auth_success(e));
-        socket.on("auth.failure", console.error);
         socket.on("topic.event", this.#on_topic_event.bind(this));
         socket.on("topic.invoke", this.#on_topic_invoke.bind(this));
 
@@ -99,12 +97,14 @@ class SAMRClient extends events.EventEmitter {
             });
         }
         add_to_resolver("auth.challenge");
+        add_to_resolver("auth.success");
         add_to_resolver("topic.joined");
         add_to_resolver("topic.left");
         add_to_resolver("topic.published");
         add_to_resolver("topic.called");
         add_to_resolver("topic.result");
 
+        // handle any events beginning with 'error.'
         socket.onAny((event_name, ...args)=>{
             if(_.startsWith(event_name, "error.")){
                 this.#event_promise_resolver.handle_error({
@@ -121,26 +121,36 @@ class SAMRClient extends events.EventEmitter {
 
     #on_connection(){
         console.log("connected");
-        this.#do_auth();
+        this.start_auth();
     }
 
     #on_reconnect(){
-        this.#do_auth();
+        this.start_auth();
     }
 
     // ---- authenticator
 
-    async #do_auth(){
+    async start_auth(){
         let hello_request = $REF(null);
         let hello_promise = this.#new_promise_of_event(
-            "auth.challenge", hello_request.uuid())
+            "auth.challenge", hello_request.uuid());
         this.socket.emit("auth.hello", hello_request.data());
 
         let { challenge } = $DEREF(await hello_promise).data();
 
         let proof = await this.#authenticator.authenticate(challenge);
-        let referenced = $REF(proof);
-        this.socket.emit("auth.verify", referenced.data());
+        let verify_request = $REF(proof);
+        let verify_promise = this.#new_promise_of_event(
+            "auth.success", verify_request.uuid());
+        this.socket.emit("auth.verify", verify_request.data());
+
+        try{
+            let verify_result = await verify_promise;
+            this.#on_auth_success(verify_result);
+        } catch(e){
+            // auth failure, e.message containing description
+            this.#on_auth_failure();
+        }
     }
 
     #on_auth_success(response){
@@ -154,9 +164,10 @@ class SAMRClient extends events.EventEmitter {
         });
     }
 
-    #on_auth_failure({ reason }){
+    #on_auth_failure(response){
+        let { reason } = $DEREF(response).data() || {};
         this.#authenticator.remove_session_id();
-        setTimeout(()=>this.#do_auth(), 5000);
+        setTimeout(()=>this.start_auth(), 5000);
     }
 
     // ---- join/leave a topic

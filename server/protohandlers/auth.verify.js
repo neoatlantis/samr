@@ -15,7 +15,7 @@ module.exports = async function(socket, orig_data){
 
     function reject(reason){
         socket.emit(
-            $E("auth.failure"),
+            $ERR("error.auth.failure"),
             $REF({ reason }, request.uuid()).data()
         );
     }

@@ -3,7 +3,6 @@ module.exports = [
     'auth.challenge',
     'auth.verify',
     'auth.success',
-    'auth.failure',
 
     'topic.join',
     'topic.joined',
