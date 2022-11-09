@@ -1,3 +1,4 @@
+const { info, error, log, $socket } = require("../libs/logging");
 const _ = require("lodash");
 const { io } = require("socket.io-client");
 const events = require("events");
@@ -17,7 +18,7 @@ function load_module(instance, functree){
 
 class SAMRClient extends events.EventEmitter {
 
-    #authenticator;
+    authenticator;
     #event_promise_resolver;
     joined_rooms;
     rpc_endpoints;
@@ -51,12 +52,12 @@ class SAMRClient extends events.EventEmitter {
     }){
         this.socket = io(url, socket_io_options);
 
-        this.#authenticator = new Authenticator(this, {
+        this.authenticator = new Authenticator(this, {
             cert, private_key_armored
         });
 
         this.#bind_events();
-        this.#authenticator.start();
+        this.authenticator.start();
     }
 
     // ---- Listens for socket.io incoming events, and resolve a previous
@@ -121,16 +122,13 @@ class SAMRClient extends events.EventEmitter {
     // ---- on new connection
 
     #on_connection(){
-        console.log("connected");
-        this.#authenticator.start();
+        log(`Connected as ${$socket(this.socket)}`);
+        this.authenticator.start();
     }
 
     #on_reconnect(){
-        this.#authenticator.start();
+        this.authenticator.start();
     }
-
-
-
 
 }
 
