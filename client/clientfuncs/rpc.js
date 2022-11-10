@@ -7,19 +7,21 @@ module.exports.__init__ = function(){
 };
 
 
-module.exports.rpc_register = function(method, handler){
+module.exports.register = function(method, handler){
     this.rpc_endpoints.set(method, handler);
     return this.join(method);
 };
 
 
-module.exports.rpc_unregister = function(method){
+module.exports.unregister = function(method){
     this.rpc_endpoints.delete(method);
     return this.leave(method);
 };
 
 
 module.exports.call = async function call(topic, data){
+    await this.join(topic);
+
     let referenced = $REF({ topic, data });
     let called_promise = this.new_promise_of_event(
         "topic.called", referenced.uuid());

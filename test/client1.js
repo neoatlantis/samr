@@ -24,12 +24,14 @@ client.on("auth.status.changed", async (auth_status)=>{
     if(inited) return;
     if(!client.authenticator.authenticated) return;
 
-    await client.rpc_register("topic.rpc-1", ({hello})=>{
+    await client.register("topic.rpc-1", ({hello})=>{
         return { "fulltext": hello };
     });
 
     await client.join("topic.rpc-2.subtopic2");
     await client.join("topic.events-only");
+
+    await client.call("topic.rpc-2", {});
 
     /*setInterval(()=>{
         client.publish("topic.events-only", {

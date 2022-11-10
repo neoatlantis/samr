@@ -40,7 +40,10 @@ class SAMRClient extends events.EventEmitter {
             cert, private_key_armored
         });
 
+        // this must be first
         load_module(this, require("./clientfuncs/join_and_leave"));
+
+        // pubsub & rpc
         load_module(this, require("./clientfuncs/rpc"));
         load_module(this, require("./clientfuncs/pubsub"));
 

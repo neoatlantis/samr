@@ -26,6 +26,8 @@ module.exports.__init__ = function(){
 
 
 module.exports.join = function(topic){
+    if(this.joined_rooms.has(topic)) return;
+
     let referenced = $REF({ topic });
     let uuid = referenced.uuid();
 
@@ -41,6 +43,8 @@ module.exports.join = function(topic){
 
 
 module.exports.leave = function(topic){
+    if(!this.joined_rooms.has(topic)) return;
+
     let referenced = $REF({ topic });
     let uuid = referenced.uuid();
 

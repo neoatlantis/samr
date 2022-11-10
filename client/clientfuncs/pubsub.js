@@ -7,7 +7,9 @@ module.exports.__init__ = function(){
 };
 
 
-module.exports.publish = function (topic, data){
+module.exports.publish = async function (topic, data){
+    await this.join(topic);
+
     let referenced = $REF({ topic, data });
     let ret = this.new_promise_of_event(
         "topic.published", referenced.uuid());
@@ -15,6 +17,15 @@ module.exports.publish = function (topic, data){
     return ret;
 };
 
+module.exports.subscribe = async function(topic, callback){
+    await this.join(topic);
+    this.topics.on(topic, callback);
+}
+
+module.exports.unsubscribe = async function(topic){
+    await this.leave(topic);
+    this.topics.off(topic);
+}
 
 module.exports._on_topic_event = async function on_topic_event(request_data){
     let request = $DEREF(request_data);
