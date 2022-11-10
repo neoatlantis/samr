@@ -6,7 +6,7 @@ const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
 function rejoin_rooms(){
     log("Rejoin topics due to rotated session.");
     this.joined_rooms.forEach((room)=>{
-        module.exports.join.call(this, room);
+        module.exports.join.call(this, room, true);
     });
 }
 
@@ -25,8 +25,8 @@ module.exports.__init__ = function(){
 }
 
 
-module.exports.join = function(topic){
-    if(this.joined_rooms.has(topic)) return;
+module.exports.join = function(topic, forced){
+    if(!forced && this.joined_rooms.has(topic)) return;
 
     let referenced = $REF({ topic });
     let uuid = referenced.uuid();
@@ -44,8 +44,8 @@ module.exports.join = function(topic){
 }
 
 
-module.exports.leave = function(topic){
-    if(!this.joined_rooms.has(topic)) return;
+module.exports.leave = function(topic, forced){
+    if(!forced && !this.joined_rooms.has(topic)) return;
 
     let referenced = $REF({ topic });
     let uuid = referenced.uuid();
