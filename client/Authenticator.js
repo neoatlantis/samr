@@ -5,7 +5,7 @@ const events = require("events");
 const { $E, $ERR, $REF, $DEREF } = require("../protodef");
 
 
-const RENEW_TIMEOUT = 150 * 1000; // renew session every 150 seconds
+const RENEW_TIMEOUT = 60 * 1000; // renew session period
 
 
 
@@ -100,6 +100,24 @@ class Authenticator extends events.EventEmitter {
             // auth failure, e.message containing description
             this.#on_auth_failure(e.reason);
         }
+    }
+
+    async handle_error(event_name){
+        /*
+            'error.auth.failure',
+            'error.auth.unauthenticated',
+            'error.auth.insufficient',
+        */
+        if(event_name == "error.auth.insufficient") return;
+
+        // similar as on_auth_failure, restart authentication!
+        this.emit("auth.status.changed", {
+            session_changed: false,
+            authenticated: false,
+        });
+        this.#cached_session_id = null;
+        this.authenticated = false;
+        this.#last_auth = 0;
     }
 
     #on_auth_success(response){

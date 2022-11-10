@@ -17,7 +17,7 @@ class Session {
         this.#id = uuidv4();
         this.#authorized_userid = user_id;
         this.#store = new Map();
-        this.reactivate();
+        this.reactivate(user_id);
     }
 
     get_id(){ return this.#id }
@@ -35,7 +35,7 @@ class Session {
     is_expired(){
         return (
             new Date().getTime() - this.#last_checkin >
-            constants.SESSION_INACTIVITY_LIFE
+            constants.SESSION_INACTIVITY_LIFE * 1000
         );
     }
 

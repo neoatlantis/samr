@@ -24,20 +24,21 @@ client.on("auth.status.changed", async (auth_status)=>{
     if(inited) return;
     if(!client.authenticator.authenticated) return;
 
-    await client.register("topic.rpc-1", ({hello})=>{
+    /*await client.register("topic.rpc-1", ({hello})=>{
         return { "fulltext": hello };
-    });
+    });*/
 
-    await client.join("topic.rpc-2.subtopic2");
-    await client.join("topic.events-only");
+//    await client.call("topic.rpc-2", {});
 
-    await client.call("topic.rpc-2", {});
-
-    /*setInterval(()=>{
-        client.publish("topic.events-only", {
-            "current-time": new Date().toISOString(),
-        });
-    }, 1000);*/
+    setInterval(()=>{
+        try{
+            client.publish("topic.events-only", {
+                "current-time": new Date().toISOString(),
+            }).catch(()=>{});
+        } catch(e){
+            console.log("error->", e);
+        }
+    }, 1000);
 
     inited = true;
 

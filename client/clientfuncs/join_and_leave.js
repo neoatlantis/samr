@@ -38,6 +38,8 @@ module.exports.join = function(topic){
     return ret.then(()=>{
         log("Joined topic: " + topic);
         this.joined_rooms.add(topic);
+    }).catch(()=>{
+        this.joined_rooms.delete(topic);
     });
 }
 
@@ -52,5 +54,7 @@ module.exports.leave = function(topic){
     this.socket.emit($E("topic.leave"), referenced.data());
     return ret.then(()=>{
         this.joined_rooms.delete(topic);
+    }).catch(()=>{
+        // do nothing
     });
 }

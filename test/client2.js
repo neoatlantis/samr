@@ -16,20 +16,25 @@ client.socket.onAny((event, args)=>{
     console.error("| ", event, args);
 })
 
-client.once("authenticated", async ()=>{
+let inited = false;
+client.on("auth.status.changed", async (auth_status)=>{
 
-    await client.join("topic.rpc-1");
-    await client.join("topic.rpc-2");
-    await client.join("topic.events-only");
+    if(inited) return;
+    if(!client.authenticator.authenticated) return;
+
+    client.subscribe("topic.events-only", (data)=>{
+        console.log("topic.event", data);
+    });
 
 
+    /*
     console.log(">> Try call topic.rpc-1");
     try{
         let result = await client.call("topic.rpc-1", { hello: "world "});
         console.log(">> Called.", result);
     } catch(e){
         console.log(">> Error:", e);
-    }
+    }*/
 
-
+    inited = true;
 });

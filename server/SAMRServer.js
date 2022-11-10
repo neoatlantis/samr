@@ -4,6 +4,7 @@ const protohandlers = require("./protohandlers");
 const openpgp = require("openpgp");
 const session_manager = require("./sessions");
 const { info, error, $socket } = require("../libs/logging");
+const { $E, $ERR, $REF, $DEREF } = require("../protodef");
 
 const SocketAuthorizationHolder = require("./SocketAuthorizationHolder");
 
@@ -120,12 +121,15 @@ class SAMRServer extends events.EventEmitter {
                 throw Error("Requires authentication.");
             }
             if(socket_session.is_expired()){
-                socket.emit("fatal.session.expired");
+                throw Error("Session expired.");
                 return false;
             }
         } catch(e){
             // no available session, emit error
-            socket.emit("auth.failure", { reason: e.message });
+            socket.emit(
+                $ERR("error.auth.unauthenticated"),
+                e.message
+            );
             return false;
         }
         return true;

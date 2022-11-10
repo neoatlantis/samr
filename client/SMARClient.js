@@ -74,10 +74,10 @@ class SAMRClient extends events.EventEmitter {
         socket.io.on("reconnect", (s)=>this.#on_reconnect());
 
         socket.on("error", (err)=>{
-            console.error("Socket error received!", err);
-            if(err && _.startsWith(err.message, "fatal.")){
+            error("Socket error received!" + err);
+            /*if(err && _.startsWith(err.message, "fatal.")){
                 socket.disconnect();
-            }
+            }*/
         });
 
         socket.on("topic.event", this._on_topic_event.bind(this));
@@ -100,12 +100,16 @@ class SAMRClient extends events.EventEmitter {
 
         // handle any events beginning with 'error.'
         socket.onAny((event_name, ...args)=>{
-            if(_.startsWith(event_name, "error.")){
-                this.#event_promise_resolver.handle_error({
-                    event: event_name,
-                    referenced_data: args[0],
-                });
+            if(!_.startsWith(event_name, "error.")) return;
+            if(_.startsWith(event_name, "error.auth.")){
+                // ask authentiator to handle
+                this.authenticator.handle_error(event_name);
             }
+
+            this.#event_promise_resolver.handle_error({
+                event: event_name,
+                referenced_data: args[0],
+            });
         });
 
         // authenticator events passing
