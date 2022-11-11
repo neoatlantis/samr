@@ -5,6 +5,7 @@ module.exports = (env)=>{
 
     return [
         require("./webpack/client.js")({ env, is_dev }),
+        require("./webpack/server.js")({ env, is_dev }),
     ];
 
 };

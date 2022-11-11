@@ -1,2 +1,4 @@
 *.sw?
 node_modules
+server/web-dev
+client/web-dev

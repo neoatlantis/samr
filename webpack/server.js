@@ -5,8 +5,8 @@ const path = require('path');
 
 
 module.exports = ({ env, is_dev })=>{
-    let entry_path  = path.join(__dirname, "..", "web-src", "client");
-    let output_path = path.join(__dirname, "..", "client", "web");
+    let entry_path  = path.join(__dirname, "..", "web-src", "server");
+    let output_path = path.join(__dirname, "..", "server", "web");
 
     if(is_dev) output_path += "-dev";
 

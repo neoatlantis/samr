@@ -1,5 +1,5 @@
 const openpgp = require("openpgp");
-const crypto = require("crypto");
+const nacl = require("tweetnacl");
 const uri = require("../uri");
 
 class OpenPGPCertIssuer{
@@ -33,9 +33,7 @@ class OpenPGPCertIssuer{
     }
 
     #get_id(){
-        let id = Buffer.alloc(8);
-        crypto.randomFillSync(id);
-        return id.toString("hex");
+        return Buffer.from(nacl.randomBytes(8)).toString("hex");
     }
 
     async go(){

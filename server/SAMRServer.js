@@ -5,6 +5,7 @@ const openpgp = require("openpgp");
 const session_manager = require("./sessions");
 const { info, error, $socket } = require("../libs/logging");
 const { $E, $ERR, $REF, $DEREF } = require("../protodef");
+const get_express_server = require("./local_http_server");
 
 const SocketAuthorizationHolder = require("./SocketAuthorizationHolder");
 
@@ -30,25 +31,29 @@ class SAMRServer extends events.EventEmitter {
         authority_public_keys,
         port=2222
     }){
-        if(ssl_cert || ssl_private_key){
-            this.https_server = require("https").createServer({
-                cert: ssl_cert,
-                key: ssl_private_key,
-            });
-            this.io = require("socket.io")(this.https_server);
-        } else {
-            this.http_server = require("http").createServer();
-            this.io = require("socket.io")(this.http_server);
-        }
-
+        this.#config_server({ port, ssl_cert, ssl_private_key });
+        this.io = require("socket.io")(this.base_server);
 
         this.authority_public_keys = await openpgp.readKeys({
             armoredKeys: authority_public_keys,
         });
 
         this.io.on("connection", (s)=>this.#on_connection(s));
+    }
 
-        (this.http_server || this.https_server).listen(port);
+    #config_server({ port, ssl_cert, ssl_private_key }){
+        const app = get_express_server.call(this);
+
+        if(ssl_cert || ssl_private_key){
+            this.base_server = require("https").createServer({
+                cert: ssl_cert,
+                key: ssl_private_key,
+            }, app);
+        } else {
+            this.base_server = require("http").createServer(app);
+        }
+
+        this.base_server.listen(port);
         console.log("Server listening on localhost:" + port);
     }
 
