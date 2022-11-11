@@ -30,7 +30,8 @@ class SAMRClient extends events.EventEmitter {
         url,
         socket_io_options={ reconnection: true },
         cert,
-        private_key_armored
+        private_key_armored,
+        local_http_server,
     }){
         super();
 
@@ -42,12 +43,15 @@ class SAMRClient extends events.EventEmitter {
 
         // this must be first
         load_module(this, require("./clientfuncs/join_and_leave"));
-
         // pubsub & rpc
         load_module(this, require("./clientfuncs/rpc"));
         load_module(this, require("./clientfuncs/pubsub"));
 
         this.socket = io(url, socket_io_options);
+
+        if(local_http_server){
+            this.local_http_server = require("./local_http_server").call(this);
+        }
 
         this.#bind_events();
         this.authenticator.start();

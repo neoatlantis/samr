@@ -11,6 +11,8 @@ const client = new SAMRClient({
     cert: fs.readFileSync("./keymaterials/auth-cert.user1.asc").toString(),
     private_key_armored: fs.readFileSync("./keymaterials/pgp-userkey1.asc")
         .toString(),
+
+    local_http_server: true,
 });
 
 client.socket.onAny((event, args)=>{
