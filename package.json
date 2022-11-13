@@ -10,6 +10,7 @@
   "author": "NeoAtlantis",
   "license": "GPL-2.0",
   "dependencies": {
+    "buffer": "^6.0.3",
     "express": "^4.18.2",
     "fancy-log": "^2.0.0",
     "js-yaml": "^4.1.0",

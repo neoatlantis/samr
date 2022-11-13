@@ -15,16 +15,31 @@ You need following data:
 <tr>
     <td>Your authority key</td>
     <td>
-        <input type="file" />
+        <input type="file" accept=".asc" @change="on_authority_key_upload"/>
         <br />
-        Type your password to use this key: <input type="password" />
+        Type your password to use this key:
+        <input type="password" v-model="authority_password" @change="parse_authority_key"/>
+        <br />
+        <span v-if="authority_key_error" style="color:red">
+            {{ authority_key_error }}
+        </span>
+        <span v-if="authority_key_success" style="color:green">
+            Authority key loaded successfully.
+        </span>
     </td>
 </tr>
 
 <tr>
     <td>User's public key</td>
     <td>
-        <textarea></textarea>
+        <textarea v-model="user_key_armored" @change="parse_user_public_key"></textarea>
+        <br />
+        <span v-if="user_key_error" style="color:red">
+            {{ user_key_error }}
+        </span>
+        <span v-if="user_key_success" style="color:green">
+            User key loaded successfully.
+        </span>
     </td>
 </tr>
 
@@ -36,6 +51,7 @@ You need following data:
             :tag="tag"
             :index="tag_i"
             @remove="remove_tag"
+            @update="update_tag"
         >
         </TagGrantChooser>
         <TagGrantChooser
@@ -48,28 +64,133 @@ You need following data:
 </tr>
 
 
+<tr>
+    <td colspan="2">
+        <button
+            @click="generate"
+            :disabled="!input_valid"
+        >Generate</button>
+    </td>
+</tr>
+
 
 </table>
 
-
-
-
+<textarea v-if="result" v-model="result" readonly></textarea>
 
 
 </template>
 <script>
 import TagGrantChooser from "sfc/TagGrantChooser.vue";
+import * as openpgp from "openpgp";
 const _ = require("lodash");
+
+const createOpenPGPCertIssuer = require("libs/openpgp-auth/OpenPGPCertIssuer");
+
+
+function read_upload_file_text(upload_el){
+    let file = upload_el.files[0];
+    if(!file) return null;
+
+    return new Promise((resolve, reject)=>{
+        let reader = new FileReader();
+        reader.readAsText(file, "UTF-8");
+        reader.onload = function (evt) {
+            return resolve(evt.target.result);
+        }
+        reader.onerror = function (evt) {
+            return reject();
+        }
+    });
+}
+
+
+
 
 export default {
 
     data(){ return {
 
+        authority_private_key_armored: "",
+        authority_private_key_read: null,
+        authority_password: "",
+        authority_key_error: false,
+        authority_key_success: false,
+
+        user_key_armored: "",
+        user_key_read: null,
+        user_key_error: false,
+        user_key_success: false,
+
         tags: [],
 
+        result: "",
     } },
 
+    computed: {
+
+        input_valid(){
+            let tags_all_valid =
+                this.tags.map((e)=>e.valid).every((e)=>e===true);
+            return (
+                tags_all_valid &&
+                this.authority_key_success &&
+                this.user_key_success
+            );
+        }
+
+    },
+
     methods: {
+
+        async on_authority_key_upload(e){
+            this.authority_private_key_armored =
+                await read_upload_file_text(e.target);
+            this.authority_password = "";
+            this.authority_key_error = "";
+            this.authority_key_success = false;
+        },
+
+        parse_authority_key: _.debounce(async function(){
+            this.authority_private_key_read = null;
+            try{
+                const privateKey = await openpgp.decryptKey({
+                    privateKey: await openpgp.readPrivateKey({
+                        armoredKey: this.authority_private_key_armored
+                    }),
+                    passphrase: this.authority_password,
+                });
+                this.authority_private_key_read = privateKey;
+                this.authority_key_error = "";
+                this.authority_key_success = true;
+            } catch(e){
+                this.authority_key_error = e.message;
+                this.authority_key_success = false;
+            }
+        }, 500),
+
+        parse_user_public_key: _.debounce(async function(){
+            if(!this.user_key_armored.trim()){
+                return;
+            }
+            this.user_key_read = null;
+            try{
+                const publicKey = await openpgp.readKey({
+                    armoredKey: this.user_key_armored,
+                });
+                if(publicKey.isPrivate()){
+                    throw Error("Supplied key is not a public key.");
+                }
+                this.user_key_error = false;
+                this.user_key_success = true;
+                this.user_key_read = publicKey;
+            } catch(e){
+                this.user_key_error = e.message;
+                this.user_key_success = false;
+            }
+        }, 500),
+
+
         add_tag(){
             this.tags.push({});
         },
@@ -77,6 +198,32 @@ export default {
         remove_tag(i){
             _.remove(this.tags, (_, _i)=>_i==i);
         },
+
+        update_tag(e){
+            this.tags[e.index] = {
+                name: e.name,
+                attrs: e.attrs,
+                valid: e.valid,
+            };
+        },
+
+        async generate(){
+            let authority = await createOpenPGPCertIssuer(
+                this.authority_private_key_read);
+
+            let bearer_public_key = this.user_key_read;
+
+            let cert = await authority
+                .bearer_fingerprint(bearer_public_key.getFingerprint())
+                .validity_duration(365*86400)
+            ;
+
+            for(let { name, attrs } of this.tags){
+                cert.tag(name, attrs);
+            }
+
+            this.result = await cert.go();
+        }
     },
 
     components: {

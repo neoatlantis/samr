@@ -1,6 +1,8 @@
 const openpgp = require("openpgp");
 const nacl = require("tweetnacl");
+const buffer = require("buffer");
 const uri = require("../uri");
+const _ = require("lodash");
 
 class OpenPGPCertIssuer{
 
@@ -33,7 +35,7 @@ class OpenPGPCertIssuer{
     }
 
     #get_id(){
-        return Buffer.from(nacl.randomBytes(8)).toString("hex");
+        return buffer.Buffer.from(nacl.randomBytes(8)).toString("hex");
     }
 
     async go(){
@@ -66,7 +68,11 @@ class OpenPGPCertIssuer{
 
 }
 
-module.exports = async function(private_key_armored){
-    let k = await openpgp.readKey({ armoredKey: private_key_armored });
-    return new OpenPGPCertIssuer(k);
+module.exports = async function(pk){
+    if(_.isString(pk)){
+        let k = await openpgp.readKey({ armoredKey: pk });
+        return new OpenPGPCertIssuer(k);
+    } else {
+        return new OpenPGPCertIssuer(pk);
+    }
 }

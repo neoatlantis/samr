@@ -33,6 +33,7 @@ class URIRule {
 
     is_valid_pattern(pattern){
         if(!_.isString(pattern)) return false;
+        pattern = pattern.trim();
         try{
             return this.normalize(pattern).split(".").every((e)=>
                 /^(\*|\*\*|[0-9a-z\-]{1,63})$/.test(e) &&
