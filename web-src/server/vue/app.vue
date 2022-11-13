@@ -1,6 +1,8 @@
 <template>
 
 <h2>SAMR Server</h2>
+
+
 <p />
 
 <nav>
@@ -11,21 +13,26 @@
 <hr />
 
 <PGPKeyGeneration v-if="1==display"></PGPKeyGeneration>
+<CertIssuer v-if="2==display"></CertIssuer>
 
 </template>
 <script>
 
 import PGPKeyGeneration from "sfc/PGPKeyGeneration.vue";
+import CertIssuer from "sfc/CertIssuer.vue";
 
 export default {
 
     data(){ return {
         display: 1,
-
+        /// #if DEV
+        display: 2,
+        /// #endif
     } },
 
     components: {
         PGPKeyGeneration,
+        CertIssuer,
     }
 
 }
