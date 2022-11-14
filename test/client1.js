@@ -1,9 +1,9 @@
 const fs = require("fs");
-const SAMRClient = require("../client/SMARClient");
+const SAMRClient = require("../client/SAMRClient");
 
 
 const client = new SAMRClient({
-    url: "wss://localhost:2222",
+    url: "ws://localhost:2222",
     socket_io_options: {
         reconnection: true,
         ca: fs.readFileSync("./keymaterials/cert.pem"),

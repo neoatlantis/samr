@@ -23,6 +23,7 @@ module.exports = ({ env, is_dev })=>{
                 app: entry_path,
                 sfc: path.resolve(entry_path, "vue"),
                 libs: path.resolve(__dirname, "..", "libs"),
+                "client-browser": path.resolve(__dirname, "..", "client-browser"),
             },
         },
         module: {
@@ -30,8 +31,6 @@ module.exports = ({ env, is_dev })=>{
                 {
                     test: /\.vue$/,
                     loader: 'vue-loader'
-                },
-                {
                 },
                 {
                     test: /\.(vue|js)$/,

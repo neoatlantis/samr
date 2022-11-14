@@ -3,6 +3,7 @@ const make_proof = require("../libs/openpgp-auth/make_proof");
 const _ = require("lodash");
 const events = require("events");
 const { $E, $ERR, $REF, $DEREF } = require("../protodef");
+const buffer = require("buffer");
 
 
 const RENEW_TIMEOUT = 60 * 1000; // renew session period
@@ -60,7 +61,7 @@ class Authenticator extends events.EventEmitter {
             private_key_armored: this.#private_key_armored,
         });
 
-        return Buffer.from(made_proof).toString("base64");
+        return buffer.Buffer.from(made_proof).toString("base64");
     }
 
     async start(restart){

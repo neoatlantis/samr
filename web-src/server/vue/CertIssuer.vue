@@ -82,27 +82,15 @@ You need following data:
 </template>
 <script>
 import TagGrantChooser from "sfc/TagGrantChooser.vue";
+import read_upload_file_text from "libs/read_upload_file_text";
 import * as openpgp from "openpgp";
+
+
 const _ = require("lodash");
 
 const createOpenPGPCertIssuer = require("libs/openpgp-auth/OpenPGPCertIssuer");
 
 
-function read_upload_file_text(upload_el){
-    let file = upload_el.files[0];
-    if(!file) return null;
-
-    return new Promise((resolve, reject)=>{
-        let reader = new FileReader();
-        reader.readAsText(file, "UTF-8");
-        reader.onload = function (evt) {
-            return resolve(evt.target.result);
-        }
-        reader.onerror = function (evt) {
-            return reject();
-        }
-    });
-}
 
 
 

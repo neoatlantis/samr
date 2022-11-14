@@ -1,5 +1,5 @@
 const fs = require("fs");
-const SAMRClient = require("../client/SMARClient");
+const SAMRClient = require("../client/SAMRClient");
 
 const client = new SAMRClient({
     url: "wss://localhost:2222",

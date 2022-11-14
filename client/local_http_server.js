@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 
 module.exports = function(){
-    // this -> the SMARClient instance
+    // this -> the SAMRClient instance
     const app = express();
 
     app.use(
@@ -13,5 +13,6 @@ module.exports = function(){
         ))
     );
 
+    app.listen(2244);
 
 }

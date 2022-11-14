@@ -32,7 +32,12 @@ class SAMRServer extends events.EventEmitter {
         port=2222
     }){
         this.#config_server({ port, ssl_cert, ssl_private_key });
-        this.io = require("socket.io")(this.base_server);
+        this.io = require("socket.io")(this.base_server, {
+            cors: {
+                origin: "*",
+                methods: ["GET", "POST"],
+            }
+        });
 
         this.authority_public_keys = await openpgp.readKeys({
             armoredKeys: authority_public_keys,

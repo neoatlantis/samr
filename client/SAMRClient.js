@@ -49,9 +49,11 @@ class SAMRClient extends events.EventEmitter {
 
         this.socket = io(url, socket_io_options);
 
+        /// #if !BROWSER
         if(local_http_server){
             this.local_http_server = require("./local_http_server").call(this);
         }
+        /// #endif
 
         this.#bind_events();
         this.authenticator.start();

@@ -51,7 +51,7 @@ which is also used to issue certificates for incoming users.
     <div>
         <textarea readonly v-model="result_privatekey" style="color:#EE0000; background-color: #FFEEEE"></textarea>
         <br />
-        <button>Download this key</button>
+        <button @click="download_privatekey">Download this key</button>
     </div>
 
     <p />
@@ -72,6 +72,23 @@ which is also used to issue certificates for incoming users.
 <script>
 
 import * as openpgp from "openpgp";
+
+
+function download_text(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
+
+
+
 
 
 export default {
@@ -111,6 +128,10 @@ export default {
     },
 
     methods: {
+
+        download_privatekey(){
+            download_text("samr-authority-key.asc", this.result_privatekey);
+        },
 
         async generate(e){
             this.generating = true;
