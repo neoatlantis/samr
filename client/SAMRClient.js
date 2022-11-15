@@ -2,6 +2,7 @@ const { info, error, log, $socket } = require("../libs/logging");
 const _ = require("lodash");
 const { io } = require("socket.io-client");
 const events = require("events");
+const StatusMonitor = require("./StatusMonitor");
 const Authenticator = require("./Authenticator");
 const OnEventPromiseResolver = require("./OnEventPromiseResolver");
 const { $E, $ERR, $REF, $DEREF } = require("../protodef");
@@ -21,6 +22,7 @@ function load_module(instance, functree){
 
 class SAMRClient extends events.EventEmitter {
 
+    status;
     authenticator;
     #event_promise_resolver;
 
@@ -36,6 +38,8 @@ class SAMRClient extends events.EventEmitter {
         super();
 
         this.#event_promise_resolver = new OnEventPromiseResolver();
+
+        this.status = new StatusMonitor(this);
 
         this.authenticator = new Authenticator(this, {
             cert, private_key_armored
@@ -56,6 +60,7 @@ class SAMRClient extends events.EventEmitter {
         /// #endif
 
         this.#bind_events();
+        this.status.start();
         this.authenticator.start();
     }
 
@@ -85,6 +90,8 @@ class SAMRClient extends events.EventEmitter {
                 socket.disconnect();
             }*/
         });
+
+        socket.on($E("sys.user.status"), (e)=>this.status.on_status(e));
 
         socket.on("topic.event", this._on_topic_event.bind(this));
         socket.on("topic.invoke", this._on_topic_invoke.bind(this));

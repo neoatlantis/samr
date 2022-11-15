@@ -32,4 +32,7 @@ module.exports._on_topic_event = async function on_topic_event(request_data){
     let { topic, data } = (request.data() || {});
 
     this.topics.emit(topic, data, request.uuid());
+    this.topics.emit("__any__", {
+        data, topic, uuid: request.uuid(),
+    })
 };

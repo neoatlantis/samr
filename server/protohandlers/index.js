@@ -7,4 +7,6 @@ module.exports = {
     "topic.publish"             : require("./topic.publish"),
     "topic.call"                : require("./topic.call"),
     "topic.yield"               : require("./topic.yield"),
+
+    "sys.user.status"           : require("./sys.user.status"),
 };

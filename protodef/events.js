@@ -19,4 +19,5 @@ module.exports = [
     'topic.yield',
     'topic.result',
 
+    'sys.user.status',
 ];

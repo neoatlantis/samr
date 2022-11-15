@@ -35,12 +35,13 @@ module.exports.join = function(topic, forced){
     this.socket.emit($E("topic.join"), referenced.data());
 
     log("Trying to join topic: " + topic);
-    return ret.then(()=>{
+    ret.then(()=>{
         log("Joined topic: " + topic);
         this.joined_rooms.add(topic);
     }).catch(()=>{
         this.joined_rooms.delete(topic);
     });
+    return ret;
 }
 
 
@@ -52,9 +53,10 @@ module.exports.leave = function(topic, forced){
 
     let ret = this.new_promise_of_event("topic.left", uuid);
     this.socket.emit($E("topic.leave"), referenced.data());
-    return ret.then(()=>{
+    ret.then(()=>{
         this.joined_rooms.delete(topic);
     }).catch(()=>{
         // do nothing
     });
+    return ret;
 }

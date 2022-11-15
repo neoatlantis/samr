@@ -33,10 +33,30 @@ tool.
 
 </form>
 
+<hr />
 
+<div style="display:flex">
+
+    <div style="width: 30vw">
+        <ConnStatus></ConnStatus>
+        <TopicJoinLeave @log="log"></TopicJoinLeave>
+    </div>
+
+    <div style="height: 60vh; width: 60vw; background-color: black; overflow-x: hidden; overflow-y: scroll">
+        <div style="color:white">
+            <div v-for="log in logs.slice().reverse()">
+                {{ log }}
+            </div>
+        </div>
+    </div>
+
+</div>
 
 </template>
 <script>
+import ConnStatus from "sfc/ConnStatus.vue";
+import TopicJoinLeave from "sfc/TopicJoinLeave.vue";
+
 import read_upload_file_text from "libs/read_upload_file_text";
 import conn from "app/conn";
 const _ = require("lodash");
@@ -48,6 +68,7 @@ export default {
         cert: "",
         private_key: "",
 
+        logs: [],
     }},
 
     methods: {
@@ -60,11 +81,19 @@ export default {
         },
 
         connect(){
-            conn({
+            let client = conn({
                 url: this.server_url,
                 cert: this.cert,
                 private_key_armored: this.private_key,
             });
+
+            client.topics.on("__any__", (e)=>{
+                this.logs.push(`Event <${e.topic}>: ${JSON.stringify(e.data)}`);
+            })
+        },
+
+        log(str){
+            this.logs.push(str);
         }
     },
 
@@ -81,6 +110,12 @@ export default {
                 )
             );
         }
+    },
+
+    components: {
+        ConnStatus,
+        TopicJoinLeave,
+
     }
 
 }
