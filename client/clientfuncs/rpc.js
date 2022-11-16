@@ -1,5 +1,6 @@
 const _ = require("lodash");
 const { $E, $ERR, $REF, $DEREF } = require("../../protodef");
+const { info, error, log, $socket } = require("../../libs/logging");
 
 
 module.exports.__init__ = function(){
@@ -9,7 +10,11 @@ module.exports.__init__ = function(){
 
 module.exports.register = function(method, handler){
     this.rpc_endpoints.set(method, handler);
-    return this.join(method);
+    let ret = this.join(method);
+    ret.catch(()=>{
+        this.rpc_endpoints.delete(method);
+    });
+    return ret;
 };
 
 
@@ -38,14 +43,25 @@ module.exports.call = async function call(topic, data){
         throw e;
     }
 
-    return this.new_promise_of_event("topic.result", invocation_id);
+    let call_ret = await this.new_promise_of_event(
+        "topic.result", invocation_id);
+
+    if(call_ret.error){
+        throw Error(call_ret.error);
+    } else {
+        return call_ret.result;
+    }
 };
 
 
 module.exports._on_topic_invoke = async function(request_data){
     let request = $DEREF(request_data);
     let { topic, data } = request.data() || {};
-    if(!this.rpc_endpoints.has(topic)) return;
+    info("Got rpc invocation on:" + topic);
+    if(!this.rpc_endpoints.has(topic)){
+        error("Wrong, local client does not know how to proceed this RPC call.");
+        return;
+    }
 
     try{
         let result = await this.rpc_endpoints.get(topic)(data);

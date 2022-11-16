@@ -40,6 +40,8 @@ tool.
     <div style="width: 30vw">
         <ConnStatus></ConnStatus>
         <TopicJoinLeave @log="log"></TopicJoinLeave>
+        <TopicPublish @log="log"></TopicPublish>
+        <TopicCall @log="log"></TopicCall>
     </div>
 
     <div style="height: 60vh; width: 60vw; background-color: black; overflow-x: hidden; overflow-y: scroll">
@@ -56,6 +58,8 @@ tool.
 <script>
 import ConnStatus from "sfc/ConnStatus.vue";
 import TopicJoinLeave from "sfc/TopicJoinLeave.vue";
+import TopicPublish from "sfc/TopicPublish.vue";
+import TopicCall from "sfc/TopicCall.vue";
 
 import read_upload_file_text from "libs/read_upload_file_text";
 import conn from "app/conn";
@@ -115,6 +119,8 @@ export default {
     components: {
         ConnStatus,
         TopicJoinLeave,
+        TopicPublish,
+        TopicCall,
 
     }
 
