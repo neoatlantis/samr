@@ -1,5 +1,5 @@
 const fs = require("fs");
-const SAMRClient = require("../client/SAMRClient");
+const SAMRClient = require("../index").client;
 const _ = require("lodash");
 
 const client = new SAMRClient({

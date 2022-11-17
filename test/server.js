@@ -1,4 +1,4 @@
-const SAMRServer = require("../server/SAMRServer");
+const SAMRServer = require("../index").server;
 const fs = require("fs");
 
 const server = new SAMRServer({
