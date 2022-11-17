@@ -1,6 +1,6 @@
 {
   "name": "samr",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Socket.IO Application Message Router.",
   "main": "index.js",
   "scripts": {
