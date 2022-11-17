@@ -20,17 +20,7 @@ client.socket.onAny((event, args)=>{
 })
 
 
-let inited = false;
-client.on("auth.status.changed", async (auth_status)=>{
-
-    if(inited) return;
-    if(!client.authenticator.authenticated) return;
-
-    /*await client.register("topic.rpc-1", ({hello})=>{
-        return { "fulltext": hello };
-    });*/
-
-//    await client.call("topic.rpc-2", {});
+client.on("ready", async ()=>{ // once should also work, ready will be emitted only once
 
     setInterval(()=>{
         try{
@@ -42,10 +32,4 @@ client.on("auth.status.changed", async (auth_status)=>{
         }
     }, 1000);
 
-    inited = true;
-
 });
-
-client.topics.on("topic.full", (data, uuid)=>{
-    console.log("Incoming topic / topic.full", uuid, data);
-})

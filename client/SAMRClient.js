@@ -25,6 +25,7 @@ class SAMRClient extends events.EventEmitter {
     status;
     authenticator;
     #event_promise_resolver;
+    #initialized = false; // true after first successful auth
 
     socket;
 
@@ -44,6 +45,13 @@ class SAMRClient extends events.EventEmitter {
         this.authenticator = new Authenticator(this, {
             cert, private_key_armored
         });
+
+        this.authenticator.on("auth.status.changed", ({authenticated})=>{
+            if(authenticated && !this.#initialized){
+                this.emit("ready");
+                this.#initialized = true;
+            }
+        })
 
         // this must be first
         load_module(this, require("./clientfuncs/join_and_leave"));

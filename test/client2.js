@@ -19,11 +19,7 @@ client.socket.onAny((event, args)=>{
     console.error("| ", event, args);
 })
 
-let inited = false;
-client.on("auth.status.changed", async (auth_status)=>{
-
-    if(inited) return;
-    if(!client.authenticator.authenticated) return;
+client.on("ready", async ()=>{
 
     client.register("topic.rpc-2.add", (e)=>{
         let a = _.get(e, "a"),
@@ -34,5 +30,4 @@ client.on("auth.status.changed", async (auth_status)=>{
         return a+b;
     })
 
-    inited = true;
 });
