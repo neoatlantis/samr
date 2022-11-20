@@ -38,8 +38,11 @@ module.exports.join = function(topic, forced){
     ret.then(()=>{
         log("Joined topic: " + topic);
         this.joined_rooms.add(topic);
-    }).catch(()=>{
-        this.joined_rooms.delete(topic);
+    }).catch((err)=>{
+        let error_name = err.name;
+        if(error_name == $ERR("error.auth.insufficient")){
+            this.joined_rooms.delete(topic);
+        }
     });
     return ret;
 }

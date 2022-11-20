@@ -20,7 +20,6 @@ client.socket.onAny((event, args)=>{
 })
 
 client.on("ready", async ()=>{
-
     client.register("topic.rpc-2.add", (e)=>{
         let a = _.get(e, "a"),
             b = _.get(e, "b");
