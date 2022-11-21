@@ -63,6 +63,19 @@ You need following data:
     </td>
 </tr>
 
+<tr>
+    <td>Validity</td>
+    <td>
+        <select v-model="validity_duration">
+            <option value="1">1 day</option>
+            <option value="31">31 days</option>
+            <option value="180">180 days</option>
+            <option value="365">1 year</option>
+            <option value="730">2 years</option>
+            <option value="3650">10 years</option>
+        </select>
+    </td>
+</tr>
 
 <tr>
     <td colspan="2">
@@ -109,6 +122,8 @@ export default {
         user_key_read: null,
         user_key_error: false,
         user_key_success: false,
+
+        validity_duration: 365,
 
         tags: [],
 
@@ -203,7 +218,7 @@ export default {
 
             let cert = await authority
                 .bearer_fingerprint(bearer_public_key.getFingerprint())
-                .validity_duration(365*86400)
+                .validity_duration(this.validity_duration*86400)
             ;
 
             for(let { name, attrs } of this.tags){
