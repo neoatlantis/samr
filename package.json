@@ -10,6 +10,7 @@
   "author": "NeoAtlantis",
   "license": "GPL-2.0",
   "dependencies": {
+    "@socket.io/redis-adapter": "^7.2.0",
     "buffer": "^6.0.3",
     "commander": "^9.4.1",
     "express": "^4.18.2",
@@ -18,6 +19,7 @@
     "lodash": "^4.17.21",
     "msgpack-lite": "^0.1.26",
     "openpgp": "^5.5.0",
+    "redis": "^4.5.0",
     "socket.io": "^4.5.3",
     "socket.io-client": "^4.5.3",
     "tweetnacl": "^1.0.3",

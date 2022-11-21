@@ -6,6 +6,8 @@ const session_manager = require("./sessions");
 const { info, error, $socket } = require("../libs/logging");
 const { $E, $ERR, $REF, $DEREF } = require("../protodef");
 const get_express_server = require("./local_http_server");
+const redis_enabled = require("./redis_enabled");
+const { createAdapter } = require("@socket.io/redis-adapter");
 
 const SocketAuthorizationHolder = require("./SocketAuthorizationHolder");
 
@@ -26,18 +28,30 @@ class SAMRServer extends events.EventEmitter {
     }
 
     async #init({
+        redis,
         ssl_cert,
         ssl_private_key,
         authority_public_keys,
         port=2222
     }){
+        // config http server
         this.#config_server({ port, ssl_cert, ssl_private_key });
+
+        // start redis connection
+        await redis_enabled.init(redis);
+        let redis_pub_client = redis_enabled.client();
+        let redis_sub_client = redis_pub_client.duplicate();
+
+        // config and start socket.io server
         this.io = require("socket.io")(this.base_server, {
             cors: {
                 origin: "*",
                 methods: ["GET", "POST"],
             }
         });
+        this.io.adapter(createAdapter(redis_pub_client, redis_sub_client));
+
+        // parse authority keys
 
         this.authority_public_keys = await openpgp.readKeys({
             armoredKeys: authority_public_keys,
