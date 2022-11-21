@@ -7,7 +7,7 @@ which is also used to issue certificates for incoming users.
 
 <p />
 
-<form action="#" @submit="generate">
+<form action="#" @submit="generate" v-if="!result_privatekey">
 <table>
     <tr>
         <td>Username</td>
@@ -87,6 +87,9 @@ which is also used to issue certificates for incoming users.
         </div>
     </template>
 
+    <p />
+    <button @click="clear_up">Reset</button>
+
 </div>
 
 
@@ -160,6 +163,13 @@ export default {
     },
 
     methods: {
+
+        clear_up(){
+            this.result_publickey = this.result_privatekey = "";
+            this.result_error = "";
+            this.result_privatekey_downloaded = false;
+            this.result_privatekey_saved = false;
+        },
 
         download_privatekey(){
             let fn = (
