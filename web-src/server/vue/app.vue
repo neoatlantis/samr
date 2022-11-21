@@ -26,7 +26,7 @@ export default {
     data(){ return {
         display: 1,
         /// #if DEV
-        display: 2,
+        display: 1,
         /// #endif
     } },
 

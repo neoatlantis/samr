@@ -18,15 +18,29 @@ which is also used to issue certificates for incoming users.
         <td><input type="email" v-model="email"/></td>
     </tr>
     <tr>
-        <td>Password</td>
-        <td><input type="password" v-model="password"/></td>
-        <td>Choose a strong password, at least 5 chars.</td>
+        <td>Usage</td>
+        <td>
+            <input type="radio" id="pgp-usage-server" v-model="usage" value="server" name="pgp-usage">
+            <label for="pgp-usage-server">Authority key</label>
+            <input type="radio" id="pgp-usage-client" v-model="usage" value="client" name="pgp-usage">
+            <label for="pgp-usage-client">Client login key</label>
+        </td>
+        <td></td>
     </tr>
-    <tr>
-        <td>Type password again</td>
-        <td><input type="password" v-model="password2"/></td>
-        <td><span v-if="password2!=password" style="color:red">Passwords not match.</span></td>
-    </tr>
+
+    <template v-if="usage=='server'">
+        <tr>
+            <td>Password</td>
+            <td><input type="password" v-model="password"/></td>
+            <td>Choose a strong password, at least 5 chars.</td>
+        </tr>
+        <tr>
+            <td>Type password again</td>
+            <td><input type="password" v-model="password2"/></td>
+            <td><span v-if="password2!=password" style="color:red">Passwords not match.</span></td>
+        </tr>
+    </template>
+
     <tr>
         <td colspan="2"><button type="submit" :disabled="!may_generate">Generate</button></td>
     </tr>
@@ -54,15 +68,24 @@ which is also used to issue certificates for incoming users.
         <button @click="download_privatekey">Download this key</button>
     </div>
 
+    <div v-if="!result_privatekey_saved">
+        <input
+            v-model="result_privatekey_saved"
+            v-bind:disabled="!result_privatekey_downloaded"
+            type="checkbox" id="private-key-saved" />
+        <label for="private-key-saved">I confirm having downloaded the above private key to my disk.</label>
+    </div>
     <p />
-    <div>
-        Following public key is needed to configure your server.
-    </div>
 
-    <div>
-        <textarea readonly v-model="result_publickey"></textarea>
-    </div>
-
+    <template v-if="result_privatekey_saved">
+        <div>
+            Following public key is needed to configure your server.
+            <br />
+            <textarea readonly v-model="result_publickey"></textarea>
+            <br />
+            <button @click="download_publickey">Download this key</button>
+        </div>
+    </template>
 
 </div>
 
@@ -106,8 +129,12 @@ export default {
         password2: "password",
         /// #endif
 
+        usage: "server",
 
+        result_usage: "",
         result_privatekey: "",
+        result_privatekey_downloaded: false,
+        result_privatekey_saved: false,
         result_publickey: "",
         result_error: "",
 
@@ -120,8 +147,13 @@ export default {
             return (
                 !this.generating &&
                 this.username != "" &&
-                this.password != "" && this.password.length > 5 &&
-                this.password2 == this.password
+                (
+                    this.usage=="client" ||
+                    (this.usage == "server" && (
+                        this.password != "" && this.password.length > 5 &&
+                        this.password2 == this.password
+                    ))
+                )
             );
         }
 
@@ -130,7 +162,22 @@ export default {
     methods: {
 
         download_privatekey(){
-            download_text("samr-authority-key.asc", this.result_privatekey);
+            let fn = (
+                "server" == this.result_usage ?
+                "samr-authority-private-key-DO-NOT-SHARE.asc" :
+                "samr-client-private-key.asc"
+            );
+            download_text(fn, this.result_privatekey);
+            this.result_privatekey_downloaded = true;
+        },
+
+        download_publickey(){
+            let fn = (
+                "server" == this.result_usage ?
+                "samr-authority-public-key.asc" :
+                "samr-client-public-key.asc"
+            );
+            download_text(fn, this.result_publickey);
         },
 
         async generate(e){
@@ -145,7 +192,7 @@ export default {
                         name: this.username,
                         email: this.email,
                     }],
-                    passphrase: this.password,
+                    passphrase: this.usage == "server" ? this.password : "",
                     format: "armored"
                 });
 
@@ -155,6 +202,9 @@ export default {
                 this.result_publickey = this.result_privatekey = "";
                 this.result_error = e.message;
             } finally {
+                this.result_privatekey_downloaded = false;
+                this.result_privatekey_saved = false;
+                this.result_usage = this.usage;
                 this.generating = false;
             }
         }
