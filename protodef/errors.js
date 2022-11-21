@@ -4,4 +4,5 @@ module.exports = [
     'error.auth.insufficient',
     'error.topic.invalid',
     'error.rpc.no-answer',
+    'error.timeout',
 ];

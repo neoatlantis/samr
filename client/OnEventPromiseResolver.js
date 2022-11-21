@@ -1,4 +1,4 @@
-const { $REF, $DEREF } = require("../protodef");
+const { $E, $ERR, $REF, $DEREF } = require("../protodef");
 const _ = require("lodash");
 
 class OnEventPromiseResolver {
@@ -67,7 +67,10 @@ class OnEventPromiseResolver {
         this.#hooks.forEach(({ reject, timeout }, uuid)=>{
             if(timeout < now){
                 if(_.isFunction(reject)){
-                    reject(`Call <${uuid}> timed out.`);
+                    let constructed_error = new Error(
+                        `Call <${uuid}> timed out.`);
+                    constructed_error.name = $ERR("error.timeout");
+                    reject(constructed_error);
                 }
                 deleting.push(uuid);
             }

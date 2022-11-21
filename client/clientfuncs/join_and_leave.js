@@ -40,7 +40,10 @@ module.exports.join = function(topic, forced){
         this.joined_rooms.add(topic);
     }).catch((err)=>{
         let error_name = err.name;
-        if(error_name == $ERR("error.auth.insufficient")){
+        if(
+            error_name == $ERR("error.auth.insufficient") ||
+            error_name == $ERR("error.topic.invalid")
+        ){
             this.joined_rooms.delete(topic);
         }
     });
