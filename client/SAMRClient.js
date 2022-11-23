@@ -1,6 +1,7 @@
 const { info, error, log, $socket } = require("../libs/logging");
 const _ = require("lodash");
 const { io } = require("socket.io-client");
+const until  = require("../libs/until");
 const events = require("events");
 const StatusMonitor = require("./StatusMonitor");
 const Authenticator = require("./Authenticator");
@@ -70,6 +71,15 @@ class SAMRClient extends events.EventEmitter {
         this.#bind_events();
         this.status.start();
         this.authenticator.start();
+    }
+
+    // ---- run fn() once the client is ready, i.e. authenticated for the first
+    //      time successfully. Also returns a Promise that resolves when ready.
+
+    ready(fn){
+        let wait_ready = until(()=>this.#initialized, 1000);
+        wait_ready.then(()=>_.isFunction(fn)?fn():null);
+        return wait_ready;
     }
 
     // ---- Listens for socket.io incoming events, and resolve a previous

@@ -20,7 +20,7 @@ client.socket.onAny((event, args)=>{
 })
 
 
-client.on("ready", async ()=>{ // once should also work, ready will be emitted only once
+client.ready(()=>{
 
     setInterval(()=>{
         try{
