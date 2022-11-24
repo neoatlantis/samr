@@ -26,12 +26,13 @@ class SAMRServer extends events.EventEmitter {
     }
 
     async #init({
+        base_server,
         ssl_cert,
         ssl_private_key,
         authority_public_keys,
         port=2222
     }){
-        this.#config_server({ port, ssl_cert, ssl_private_key });
+        this.#config_server({ base_server, port, ssl_cert, ssl_private_key });
         this.io = require("socket.io")(this.base_server, {
             cors: {
                 origin: "*",
@@ -46,20 +47,23 @@ class SAMRServer extends events.EventEmitter {
         this.io.on("connection", (s)=>this.#on_connection(s));
     }
 
-    #config_server({ port, ssl_cert, ssl_private_key }){
+    #config_server({ base_server, port, ssl_cert, ssl_private_key }){
         const app = get_express_server.call(this);
 
-        if(ssl_cert || ssl_private_key){
-            this.base_server = require("https").createServer({
-                cert: ssl_cert,
-                key: ssl_private_key,
-            }, app);
+        if(!base_server){
+            if(ssl_cert || ssl_private_key){
+                this.base_server = require("https").createServer({
+                    cert: ssl_cert,
+                    key: ssl_private_key,
+                }, app);
+            } else {
+                this.base_server = require("http").createServer(app);
+            }
+            this.base_server.listen(port);
+            console.log("Server listening on localhost:" + port);
         } else {
-            this.base_server = require("http").createServer(app);
+            this.base_server = base_server;
         }
-
-        this.base_server.listen(port);
-        console.log("Server listening on localhost:" + port);
     }
 
     #customize_socket(socket){
