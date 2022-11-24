@@ -2,6 +2,7 @@ const msgpack = require("msgpack-lite");
 const openpgp = require("openpgp");
 const _ = require("lodash");
 const createOpenPGPCertReader = require("./OpenPGPCertReader");
+const constants = require("./constants");
 
 class OpenPGPProofResult {
 
@@ -87,11 +88,17 @@ module.exports = async function(proof, issuer_public_key){
         message: signed,
         verificationKeys: public_key,
         format: "binary",
+        date: new Date(new Date().getTime() - constants.TIME_TOLERANCE),
     });
-    let verification_tasks = await Promise.all(
-        verifying.signatures.map((e)=>e.verified));
-    if(_.includes(verification_tasks, false)){
-        return new OpenPGPProofResult("Signature invalid.");
+
+    try{
+        let verification_tasks = await Promise.all(
+            verifying.signatures.map((e)=>e.verified));
+        if(_.includes(verification_tasks, false)){
+            return new OpenPGPProofResult("Signature invalid.");
+        }
+    } catch(e){
+        return new OpenPGPProofResult("Signature creation time invalid.");
     }
 
     let signed_obj = null;

@@ -3,14 +3,13 @@ const crypto = require("crypto");
 const _ = require("lodash");
 const yaml = require("js-yaml");
 const uri = require("../uri");
+const constants = require("./constants");
 const OpenPGPCertResult = require("./OpenPGPCertResult");
 
 
 class OpenPGPCertReader{
 
     #verifying_keys;
-
-    TIME_TOLERANCE = 30000;
 
     constructor(verifying_keys){
         this.#verifying_keys = verifying_keys;
@@ -32,7 +31,7 @@ class OpenPGPCertReader{
                 message,
                 verificationKeys: this.#verifying_keys,
                 format: "utf8",
-                date: new Date(new Date().getTime() - this.TIME_TOLERANCE),
+                date: new Date(new Date().getTime() - constants.TIME_TOLERANCE),
             });
         } catch(e){
             return null;
