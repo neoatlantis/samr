@@ -10,6 +10,8 @@ class OpenPGPCertReader{
 
     #verifying_keys;
 
+    TIME_TOLERANCE = 30000;
+
     constructor(verifying_keys){
         this.#verifying_keys = verifying_keys;
     }
@@ -30,14 +32,20 @@ class OpenPGPCertReader{
                 message,
                 verificationKeys: this.#verifying_keys,
                 format: "utf8",
+                date: new Date(new Date().getTime() - this.TIME_TOLERANCE),
             });
         } catch(e){
             return null;
         }
 
-        let verified_n = await Promise.all(
-            verify_task.signatures.map((e)=>e.verified));
-        if(_.includes(verified_n, false)) return null;
+        try{
+            let verified_n = await Promise.all(
+                verify_task.signatures.map((e)=>e.verified));
+            if(_.includes(verified_n, false)) return null;
+        } catch(e){
+            console.log(e);
+            return null;
+        }
 
         return await this.#verify_payload(verify_task.data);
     }
