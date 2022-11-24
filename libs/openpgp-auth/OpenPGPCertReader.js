@@ -31,7 +31,7 @@ class OpenPGPCertReader{
                 message,
                 verificationKeys: this.#verifying_keys,
                 format: "utf8",
-                date: new Date(new Date().getTime() - constants.TIME_TOLERANCE),
+                date: new Date(new Date().getTime() + constants.TIME_TOLERANCE),
             });
         } catch(e){
             return null;

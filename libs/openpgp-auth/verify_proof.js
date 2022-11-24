@@ -88,7 +88,7 @@ module.exports = async function(proof, issuer_public_key){
         message: signed,
         verificationKeys: public_key,
         format: "binary",
-        date: new Date(new Date().getTime() - constants.TIME_TOLERANCE),
+        date: new Date(new Date().getTime() + constants.TIME_TOLERANCE),
     });
 
     try{
